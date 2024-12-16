@@ -1,0 +1,14 @@
+:root {
+  /* Limits */
+  --max-content-width: 1440px;
+
+  /* Spacing */
+  --spacing-default: 16px;
+  --spacing-xSmall: 4px;
+  --spacing-small: 8px;
+  --spacing-large: 32px;
+  --spacing-xLarge: 64px;
+
+  /* Border */
+  --border-radius-default: 8px;
+}

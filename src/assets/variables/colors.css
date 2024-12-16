@@ -1,0 +1,21 @@
+:root {
+  /* Colours */
+  --c-pure-white: hsl(0, 0%, 100%);
+  --c-pure-black: hsl(0, 0%, 0%);
+
+  --c-white: hsl(0, 0%, 96%);
+  --c-lGrey: hsl(0, 0%, 91.5%);
+  --c-grey: hsl(240, 3%, 39%);
+  --c-dGrey: hsl(0, 0%, 15%);
+  --c-black: hsl(0, 0%, 11%);
+
+  --c-accent-primary: hsl(248, 73%, 57%);
+  --c-accent-primary-80: hsla(248, 73%, 57%, 80%);
+
+  --c-success: hsl(142, 52%, 50%);
+  --c-error: hsl(358, 82%, 64%);
+
+  /* Theming */
+  --c-page-bg: hsl(246.45deg 11.25% 10.75%);
+  --c-text: var(--c-white);
+}
