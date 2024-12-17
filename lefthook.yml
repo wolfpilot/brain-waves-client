@@ -1,0 +1,9 @@
+pre-commit:
+  parallel: true
+  commands:
+    code-quality:
+      run: pnpm format && pnpm type-check && pnpm lint
+    unit-tests:
+      run: pnpm test-unit
+    e2e-tests:
+      run: pnpm test-e2e
