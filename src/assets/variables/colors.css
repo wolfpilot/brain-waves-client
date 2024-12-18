@@ -20,6 +20,8 @@
   --c-accent-4: hsl(293.33 11.25% 31.37%);
   --c-accent-5: hsl(210 3.7% 10.59%);
 
+  --c-accent-4-10: hsla(293.33, 11.25%, 31.37%, 0.1);
+
   --c-success: hsl(142, 52%, 50%);
   --c-error: hsl(358, 82%, 64%);
 
@@ -36,4 +38,23 @@
     var(--c-accent-1) 60%,
     var(--c-white) 75%
   );
+
+  /* Patterns */
+  --p-cross: radial-gradient(circle, transparent 15%, var(--c-page-background) 16%) 0% 0%,
+    linear-gradient(
+        0deg,
+        transparent 48%,
+        var(--c-accent-4-10) 49%,
+        var(--c-accent-4-10) 51%,
+        transparent 52%
+      )
+      0% 0% / 1em 0em,
+    linear-gradient(
+        90deg,
+        transparent 48%,
+        var(--c-accent-4-10) 49%,
+        var(--c-accent-4-10) 51%,
+        transparent 52%
+      )
+      0% 0% var(--c-page-background);
 }
