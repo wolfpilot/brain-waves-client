@@ -1,6 +1,6 @@
 :root {
   /* Fonts */
-  --font-family: Arial, Helvetica, sans-serif;
+  --font-family: 'Karla', Helvetica, sans-serif;
 
   /* Weights */
   --font-weight-light: 300;
@@ -17,7 +17,9 @@
   --copy-l-font-size: 18px;
 
   /* Titles and subtitles */
+  --heading-xs-font-size: 20px;
   --heading-s-font-size: 24px;
   --heading-m-font-size: 36px;
   --heading-l-font-size: 64px;
+  --heading-xl-font-size: 128px;
 }

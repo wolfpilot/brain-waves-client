@@ -9,7 +9,8 @@ import { useWebSocketStore } from '@stores/websocket.stores'
 import { useWebSocket } from '@utils/services/useWebSocket.services'
 
 // Components
-import SiteFooter from '@components/Site/SiteFooter/SiteFooter.vue'
+// import SiteFooter from '@components/Site/SiteFooter/SiteFooter.vue'
+import { SiteHeader, SiteFooter } from '@components/Site'
 
 const websocketStore = useWebSocketStore()
 const webSocket = useWebSocket()
@@ -22,6 +23,8 @@ watch(webSocket.isConnected, () => {
 </script>
 
 <template>
+  <SiteHeader />
+
   <RouterView />
 
   <SiteFooter />

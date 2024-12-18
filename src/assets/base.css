@@ -1,7 +1,7 @@
 body {
   min-height: 100vh;
-  background-color: var(--c-page-bg);
-  color: var(--c-text);
+  background-color: var(--c-page-background);
+  color: var(--c-page-foreground);
   font-family: var(--font-family);
   font-size: var(--text-default-font-size);
   line-height: var(--text-default-line-height);
@@ -32,7 +32,7 @@ button {
 }
 
 a {
-  color: var(--c-accent-primary);
+  color: var(--c-accent-1);
   text-decoration: underline;
 
   &:hover,

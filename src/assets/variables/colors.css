@@ -9,13 +9,31 @@
   --c-dGrey: hsl(0, 0%, 15%);
   --c-black: hsl(0, 0%, 11%);
 
-  --c-accent-primary: hsl(248, 73%, 57%);
-  --c-accent-primary-80: hsla(248, 73%, 57%, 80%);
+  /**
+   * Thanks goes to Isoli for this wonderful colour palette!
+   *
+   * @see https://www.colourlovers.com/palette/1904890/600
+   */
+  --c-accent-1: hsl(0 79.19% 66.08%);
+  --c-accent-2: hsl(351.52 41.82% 56.86%);
+  --c-accent-3: hsl(334.47 21.08% 43.73%);
+  --c-accent-4: hsl(293.33 11.25% 31.37%);
+  --c-accent-5: hsl(210 3.7% 10.59%);
 
   --c-success: hsl(142, 52%, 50%);
   --c-error: hsl(358, 82%, 64%);
 
   /* Theming */
-  --c-page-bg: hsl(246.45deg 11.25% 10.75%);
-  --c-text: var(--c-white);
+  --c-page-background: hsl(246.45 11.25% 10.75%);
+  --c-page-foreground: hsl(248, 71%, 96%);
+
+  /* Gradients */
+  --g-diag-accent: linear-gradient(
+    45deg,
+    var(--c-white) 25%,
+    var(--c-accent-4) 35%,
+    var(--c-accent-3) 50%,
+    var(--c-accent-1) 60%,
+    var(--c-white) 75%
+  );
 }

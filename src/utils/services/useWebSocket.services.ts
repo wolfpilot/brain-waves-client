@@ -1,7 +1,7 @@
 import { ref, onUnmounted } from 'vue'
 
 // Constants
-import { WS_ENDPOINT_URL } from '@/constants/api.constants'
+import { WS_ENDPOINT_URL } from '@constants/api.constants'
 
 export const useWebSocket = () => {
   const ws = ref<WebSocket | null>(null)
