@@ -1,0 +1,25 @@
+:root {
+  /* Fonts */
+  --font-family: 'Karla', Helvetica, sans-serif;
+
+  /* Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  /* Regular text */
+  --text-default-font-size: 16px;
+  --text-default-line-height: 1.5;
+
+  /* Paragraphs */
+  --copy-s-font-size: 13px;
+  --copy-m-font-size: 16px;
+  --copy-l-font-size: 18px;
+
+  /* Titles and subtitles */
+  --heading-xs-font-size: 20px;
+  --heading-s-font-size: 24px;
+  --heading-m-font-size: 36px;
+  --heading-l-font-size: 64px;
+  --heading-xl-font-size: 128px;
+}

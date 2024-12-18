@@ -1,0 +1,13 @@
+:root {
+  /* Ease */
+  --anim-ease-default: ease-in-out;
+  --anim-ease-cubic: cubic-bezier(0.4, 0, 0.2, 1);
+  --anim-ease-elastic: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+  /* Duration */
+  --anim-duration-veryFast: 0.05s;
+  --anim-duration-fast: 0.1s;
+  --anim-duration-medium: 0.25s;
+  --anim-duration-slow: 0.4s;
+  --anim-duration-verySlow: 1s;
+}
