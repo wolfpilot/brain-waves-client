@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import Canvas from "@components/Canvas/Canvas.vue"
+</script>
+
 <template>
-  <h1>Homepage</h1>
+  <Canvas />
 </template>

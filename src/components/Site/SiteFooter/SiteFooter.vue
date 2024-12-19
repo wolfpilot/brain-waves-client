@@ -3,7 +3,7 @@ import { computed } from "vue"
 import { storeToRefs } from "pinia"
 
 // Stores
-import { useWebSocketStore } from "@stores/websocket.stores"
+import { useWebSocketStore } from "@stores/index"
 
 const websocketStore = useWebSocketStore()
 const { isConnected } = storeToRefs(websocketStore)

@@ -13,3 +13,8 @@ export const useWebSocketStore = defineStore("websocket", () => {
     updateIsConnected,
   }
 })
+
+export type WebSocketStore = Omit<
+  ReturnType<typeof useWebSocketStore>,
+  keyof ReturnType<typeof defineStore>
+>
