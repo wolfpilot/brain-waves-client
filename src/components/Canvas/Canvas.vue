@@ -5,6 +5,9 @@ import { useEventListener, useDebounceFn } from "@vueuse/core"
 // Stores
 import { useCanvasStore } from "@stores/index"
 
+// Utils
+import { getCssVars } from "@utils/helpers/dom.helpers"
+
 const canvasStore = useCanvasStore()
 
 const wrapperRef: Ref<HTMLDivElement | null> = ref(null)
@@ -31,9 +34,11 @@ onMounted(() => {
 
   if (!wrapperRef.value || !canvasRef.value || !ctx.value) return
 
+  const cssVars = getCssVars()
   const bounds = wrapperRef.value.getBoundingClientRect()
 
   canvasStore.$patch({
+    cssVars,
     x: bounds.x,
     y: bounds.y,
     width: bounds.width,
