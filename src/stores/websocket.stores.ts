@@ -1,7 +1,7 @@
-import { ref } from 'vue'
-import { defineStore } from 'pinia'
+import { ref } from "vue"
+import { defineStore } from "pinia"
 
-export const useWebSocketStore = defineStore('websocket', () => {
+export const useWebSocketStore = defineStore("websocket", () => {
   const isConnected = ref(false)
 
   const updateIsConnected = (newValue: boolean) => {
