@@ -29,6 +29,7 @@ const theme = computed(() => ({
   display: flex;
   margin-top: auto;
   padding: var(--spacing-small) var(--spacing-default);
+  background: var(--c-page-background);
   border-top: 1px solid var(--c-dGrey);
 }
 

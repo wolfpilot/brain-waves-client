@@ -1,0 +1,8 @@
+/* Modifiers */
+.IS_GRAB {
+  cursor: grab;
+}
+
+.IS_GRABBING {
+  cursor: grabbing;
+}

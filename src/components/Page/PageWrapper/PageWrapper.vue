@@ -6,8 +6,8 @@
 
 <style lang="css" module>
 .wrapper {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  background: var(--p-cross);
-  background-size: 60px 60px;
 }
 </style>

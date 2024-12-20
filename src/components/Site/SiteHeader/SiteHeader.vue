@@ -16,8 +16,10 @@ import { clientRoutes } from "@constants/routes.constants"
 
 <style lang="css" module>
 .wrapper {
+  display: flex;
   height: var(--size-siteHeaderMobHeight);
   padding: var(--spacing-small) var(--spacing-default);
+  background: var(--c-page-background);
   border-bottom: 1px solid var(--c-dGrey);
 
   @media only screen and (min-width: 768px) {
