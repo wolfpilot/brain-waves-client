@@ -18,7 +18,6 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { getCssVars } from "@utils/helpers/dom.helpers"
-import Engine from "@utils/canvas/core/Engine.canvas"
 import { storeToRefs } from "pinia"
 
 // Setup
@@ -111,13 +110,6 @@ onMounted(() => {
     width: bounds.width,
     height: bounds.height,
   })
-
-  // Initialize entities
-  const engine = new Engine({
-    ctx: ctx.value,
-  })
-
-  engine.init()
 
   // Bind listeners
   useEventListener(window, "resize", handleOnResize)

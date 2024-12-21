@@ -12,7 +12,7 @@ export const getCssVars = (elem: HTMLElement = document.documentElement) => {
      */
     const styles = elem.computedStyleMap()
 
-    for (const style of elem.computedStyleMap()) {
+    for (const style of styles) {
       const [prop, val] = style as [string, CSSUnparsedValue[]]
 
       if (prop.startsWith("--")) {
