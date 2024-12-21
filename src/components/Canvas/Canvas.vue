@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { type Ref, ref, reactive, onMounted, watch } from "vue"
+import { storeToRefs } from "pinia"
 import { useEventListener, useDebounceFn, useThrottleFn } from "@vueuse/core"
 
 // Types
@@ -18,20 +19,22 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { getCssVars } from "@utils/helpers/dom.helpers"
-import { storeToRefs } from "pinia"
 
 // Setup
 const DEBOUNCE_RESIZE_MS = 500
-const THROTTLE_MOUSE_MOVE_MS = 15
+const THROTTLE_MOUSE_MOVE_MS = 1000 / 60 // aka 60Hz
 
 const canvasStore = useCanvasStore()
 
 const { mousePos } = storeToRefs(canvasStore)
 
 const wrapperRef: Ref<HTMLDivElement | null> = ref(null)
-const underlayRef: Ref<HTMLDivElement | null> = ref(null)
+const gridRef: Ref<HTMLDivElement | null> = ref(null)
 const canvasRef: Ref<HTMLCanvasElement | null> = ref(null)
 const ctx: Ref<CanvasRenderingContext2D | null> = ref(null)
+
+const wrapperBounds: Ref<DOMRect | null> = ref(null)
+const gridBounds: Ref<DOMRect | null> = ref(null)
 const viewportPos = ref<Coords | null>({
   x: 0,
   y: 0,
@@ -39,8 +42,51 @@ const viewportPos = ref<Coords | null>({
 
 const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
+const updateBounds = () => {
+  if (!wrapperRef.value || !gridRef.value) return
+
+  const cssVars = getCssVars()
+
+  wrapperBounds.value = wrapperRef.value.getBoundingClientRect()
+  gridBounds.value = gridRef.value.getBoundingClientRect()
+
+  canvasStore.$patch({
+    cssVars,
+    x: wrapperBounds.value.x,
+    y: wrapperBounds.value.y,
+    width: wrapperBounds.value.width,
+    height: wrapperBounds.value.height,
+  })
+}
+
+const bindListeners = () => {
+  if (!canvasRef.value) return
+
+  useEventListener(window, "resize", handleOnResize)
+  useEventListener(canvasRef, "mousedown", handleMouseDown)
+  useEventListener(window, "mouseup", handleMouseUp)
+  useEventListener(window, "mousemove", handleMouseMove)
+}
+
 const panCanvas = (state: Coords | null, prevState: Coords | null) => {
-  if (!state || !prevState || !viewportPos.value || !underlayRef.value) return
+  if (
+    !state ||
+    !prevState ||
+    !viewportPos.value ||
+    !gridRef.value ||
+    !gridBounds.value ||
+    !canvasStore.cssVars
+  ) {
+    return
+  }
+
+  const cssSiteHeaderHeight = canvasStore.cssVars.get("--size-siteHeaderHeight")
+  const cssSiteFooterHeight = canvasStore.cssVars.get("--size-siteFooterHeight")
+
+  if (!cssSiteHeaderHeight || !cssSiteFooterHeight) return
+
+  const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
+  const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
 
   const dX = state.x - prevState.x
   const dY = state.y - prevState.y
@@ -48,26 +94,37 @@ const panCanvas = (state: Coords | null, prevState: Coords | null) => {
   const newX = viewportPos.value.x + dX
   const newY = viewportPos.value.y + dY
 
+  const finalX =
+    // Check if outside left bounds
+    newX > 0
+      ? 0
+      : // or outside right bounds
+        newX < window.innerWidth - gridBounds.value.width
+        ? window.innerWidth - gridBounds.value.width
+        : // else assign the newly calculated coords
+          newX
+
+  const finalY =
+    // Check if outside top bounds
+    newY > siteHeaderHeight
+      ? siteHeaderHeight
+      : // or outside bottom bounds
+        newY < window.innerHeight - siteFooterHeight - gridBounds.value.height
+        ? window.innerHeight - siteFooterHeight - gridBounds.value.height
+        : // else assign the newly calculated coords
+          newY
+
   viewportPos.value = {
-    x: newX,
-    y: newY,
+    x: finalX,
+    y: finalY,
   }
 
-  underlayRef.value.style.transform = `translate(${newX}px, ${newY}px)`
+  gridRef.value.style.transform = `translate(${finalX}px, ${finalY}px)`
 }
 
 // Handlers
 const handleOnResize = useDebounceFn(() => {
-  if (!wrapperRef.value) return
-
-  const bounds = wrapperRef.value.getBoundingClientRect()
-
-  canvasStore.$patch({
-    x: bounds.x,
-    y: bounds.y,
-    width: bounds.width,
-    height: bounds.height,
-  })
+  updateBounds()
 }, DEBOUNCE_RESIZE_MS)
 
 const handleMouseDown = (e: MouseEvent) => {
@@ -97,25 +154,10 @@ const handleMouseMove = useThrottleFn((e: MouseEvent) => {
 onMounted(() => {
   ctx.value = canvasRef.value?.getContext("2d") || null
 
-  if (!wrapperRef.value || !canvasRef.value || !ctx.value) return
+  if (!ctx.value) return
 
-  // Setup
-  const cssVars = getCssVars()
-  const bounds = wrapperRef.value.getBoundingClientRect()
-
-  canvasStore.$patch({
-    cssVars,
-    x: bounds.x,
-    y: bounds.y,
-    width: bounds.width,
-    height: bounds.height,
-  })
-
-  // Bind listeners
-  useEventListener(window, "resize", handleOnResize)
-  useEventListener(canvasRef, "mousedown", handleMouseDown)
-  useEventListener(window, "mouseup", handleMouseUp)
-  useEventListener(window, "mousemove", handleMouseMove)
+  updateBounds()
+  bindListeners()
 })
 
 watch(mousePos, (state, prevState) => {
@@ -134,9 +176,7 @@ watch(mousePos, (state, prevState) => {
     ref="wrapperRef"
     :class="[$style.wrapper, activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]"
   >
-    <div :class="$style.overlay">
-      <div ref="underlayRef" :class="$style.underlay"></div>
-    </div>
+    <div ref="gridRef" :class="$style.grid" />
     <canvas ref="canvasRef" :width="canvasStore.width || 0" :height="canvasStore.height || 0" />
   </div>
 </template>
@@ -146,21 +186,16 @@ watch(mousePos, (state, prevState) => {
   flex: 1;
 }
 
-.overlay {
+.grid {
   position: absolute;
   z-index: -1;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
   width: var(--canvas-max-width);
   height: var(--canvas-max-height);
-}
-
-.underlay {
-  width: 100%;
-  height: 100%;
   background: var(--p-cross);
   background-size: var(--canvas-bg-tile-size-px) var(--canvas-bg-tile-size-px);
   border: 5px solid var(--c-accent-2);
+  transform-origin: top left;
 }
 </style>
