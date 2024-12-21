@@ -1,3 +1,8 @@
+html,
+body {
+  overflow: hidden;
+}
+
 body {
   min-height: 100vh;
   background-color: var(--c-page-background);

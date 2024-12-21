@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { type Ref, ref, reactive, onMounted } from "vue"
+import { type Ref, ref, reactive, onMounted, watch } from "vue"
 import { useEventListener, useDebounceFn, useThrottleFn } from "@vueuse/core"
+
+// Types
+import { type Coords } from "@ts/math.types"
 
 // Stores
 import { useCanvasStore } from "@stores/index"
@@ -15,6 +18,8 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { getCssVars } from "@utils/helpers/dom.helpers"
+import Engine from "@utils/canvas/core/Engine.canvas"
+import { storeToRefs } from "pinia"
 
 // Setup
 const DEBOUNCE_RESIZE_MS = 500
@@ -22,18 +27,32 @@ const THROTTLE_MOUSE_MOVE_MS = 15
 
 const canvasStore = useCanvasStore()
 
+const { mousePos } = storeToRefs(canvasStore)
+
 const wrapperRef: Ref<HTMLDivElement | null> = ref(null)
 const underlayRef: Ref<HTMLDivElement | null> = ref(null)
 const canvasRef: Ref<HTMLCanvasElement | null> = ref(null)
 const ctx: Ref<CanvasRenderingContext2D | null> = ref(null)
+const viewportPos = ref<Coords | null>({
+  x: 0,
+  y: 0,
+})
 
 const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
-const panCanvas = (e: MouseEvent) => {
-  if (!underlayRef.value || !canvasStore.width || !canvasStore.height) return
+const panCanvas = (state: Coords | null, prevState: Coords | null) => {
+  if (!state || !prevState || !viewportPos.value || !underlayRef.value) return
 
-  const newX = e.clientX - canvasStore.width / 2
-  const newY = e.clientY - canvasStore.height / 2
+  const dX = state.x - prevState.x
+  const dY = state.y - prevState.y
+
+  const newX = viewportPos.value.x + dX
+  const newY = viewportPos.value.y + dY
+
+  viewportPos.value = {
+    x: newX,
+    y: newY,
+  }
 
   underlayRef.value.style.transform = `translate(${newX}px, ${newY}px)`
 }
@@ -69,12 +88,9 @@ const handleMouseUp = (e: MouseEvent) => {
 }
 
 const handleMouseMove = useThrottleFn((e: MouseEvent) => {
-  switch (true) {
-    case activeMouseButtons.get("middle"):
-      panCanvas(e)
-      return
-    default:
-      return
+  canvasStore.mousePos = {
+    x: e.clientX,
+    y: e.clientY,
   }
 }, THROTTLE_MOUSE_MOVE_MS)
 
@@ -96,11 +112,28 @@ onMounted(() => {
     height: bounds.height,
   })
 
+  // Initialize entities
+  const engine = new Engine({
+    ctx: ctx.value,
+  })
+
+  engine.init()
+
   // Bind listeners
   useEventListener(window, "resize", handleOnResize)
   useEventListener(canvasRef, "mousedown", handleMouseDown)
-  useEventListener(canvasRef, "mouseup", handleMouseUp)
-  useEventListener(canvasRef, "mousemove", handleMouseMove)
+  useEventListener(window, "mouseup", handleMouseUp)
+  useEventListener(window, "mousemove", handleMouseMove)
+})
+
+watch(mousePos, (state, prevState) => {
+  switch (true) {
+    case activeMouseButtons.get("middle"):
+      panCanvas(state, prevState)
+      return
+    default:
+      return
+  }
 })
 </script>
 
@@ -118,15 +151,11 @@ onMounted(() => {
 
 <style lang="css" module>
 .wrapper {
-  --canvas-max-width: 4000px;
-  --canvas-max-height: 2000px;
-  --canvas-bg-tile-size-px: 60px;
-
   flex: 1;
 }
 
 .overlay {
-  position: fixed;
+  position: absolute;
   z-index: -1;
   top: 50%;
   left: 50%;
@@ -140,5 +169,6 @@ onMounted(() => {
   height: 100%;
   background: var(--p-cross);
   background-size: var(--canvas-bg-tile-size-px) var(--canvas-bg-tile-size-px);
+  border: 5px solid var(--c-accent-2);
 }
 </style>

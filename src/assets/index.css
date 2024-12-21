@@ -3,6 +3,7 @@
 
 /* Variables */
 @import "./variables/animation.css";
+@import "./variables/canvas.css";
 @import "./variables/colors.css";
 @import "./variables/layout.css";
 @import "./variables/sizes.css";
