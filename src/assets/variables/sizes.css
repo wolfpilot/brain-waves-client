@@ -1,4 +1,8 @@
 :root {
-  --size-siteHeaderMobHeight: 48px;
-  --size-siteHeaderDeskHeight: 60px;
+  --size-siteHeaderHeight: 48px;
+  --size-siteFooterHeight: 36px;
+
+  @media only screen and (min-width: 768px) {
+    --size-siteHeaderHeight: 60px;
+  }
 }

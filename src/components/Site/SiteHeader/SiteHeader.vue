@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink } from "vue-router"
 
 // Constants
-import { clientRoutes } from '@constants/routes.constants'
+import { clientRoutes } from "@constants/routes.constants"
 </script>
 
 <template>
@@ -16,13 +16,15 @@ import { clientRoutes } from '@constants/routes.constants'
 
 <style lang="css" module>
 .wrapper {
-  height: var(--size-siteHeaderMobHeight);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  height: var(--size-siteHeaderHeight);
   padding: var(--spacing-small) var(--spacing-default);
+  background: var(--c-page-background);
   border-bottom: 1px solid var(--c-dGrey);
-
-  @media only screen and (min-width: 768px) {
-    height: var(--size-siteHeaderDeskHeight);
-  }
 }
 
 .logoLink {

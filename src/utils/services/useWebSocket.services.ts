@@ -1,7 +1,7 @@
-import { ref, onUnmounted } from 'vue'
+import { ref, onUnmounted } from "vue"
 
 // Constants
-import { WS_ENDPOINT_URL } from '@constants/api.constants'
+import { WS_ENDPOINT_URL } from "@constants/api.constants"
 
 export const useWebSocket = () => {
   const ws = ref<WebSocket | null>(null)
@@ -10,7 +10,7 @@ export const useWebSocket = () => {
 
   const connect = (): void => {
     if (ws.value) {
-      console.warn('WebSocket already connected.')
+      console.warn("WebSocket already connected.")
       return
     }
 
@@ -20,32 +20,32 @@ export const useWebSocket = () => {
       if (!ws.value) return
 
       isConnected.value = true
-      ws.value.send('start')
+      ws.value.send("start")
 
-      console.log('WebSocket connection opened.')
+      console.log("WebSocket connection opened.")
     }
 
     ws.value.onclose = () => {
       isConnected.value = false
 
-      console.log('WebSocket connection closed.')
+      console.log("WebSocket connection closed.")
     }
 
     ws.value.onmessage = (event: MessageEvent) => {
       messages.value.push(event.data)
 
-      console.log('WebSocket message received:', event.data)
+      console.log("WebSocket message received:", event.data)
     }
 
     ws.value.onerror = (error: Event) => {
-      console.error('WebSocket error:', error)
+      console.error("WebSocket error:", error)
     }
   }
 
   // Disconnect the WebSocket
   const disconnect = (): void => {
     if (!ws.value) {
-      console.warn('Cannot disconnect, WebSocket is not connected.')
+      console.warn("Cannot disconnect, WebSocket is not connected.")
 
       return
     }
@@ -57,7 +57,7 @@ export const useWebSocket = () => {
   // Send a message via WebSocket
   const sendMessage = (message: string): void => {
     if (!isConnected.value || !ws.value) {
-      console.warn('Cannot send message, WebSocket is not connected.')
+      console.warn("Cannot send message, WebSocket is not connected.")
 
       return
     }

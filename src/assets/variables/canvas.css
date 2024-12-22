@@ -1,0 +1,5 @@
+:root {
+  --canvas-max-width: 4000px;
+  --canvas-max-height: 2000px;
+  --canvas-bg-tile-size-px: 60px;
+}
