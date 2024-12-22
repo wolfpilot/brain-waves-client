@@ -26,6 +26,10 @@ const theme = computed(() => ({
 
 <style lang="css" module>
 .wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   height: var(--size-siteFooterHeight);
   margin-top: auto;

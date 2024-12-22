@@ -10,6 +10,7 @@ export const useCanvasStore = defineStore("canvas", () => {
   const y = ref<number | null>(null)
   const width = ref<number | null>(null)
   const height = ref<number | null>(null)
+  const viewportPos = ref<Coords | null>(null)
   const mousePos = ref<Coords | null>(null)
 
   return {
@@ -18,6 +19,7 @@ export const useCanvasStore = defineStore("canvas", () => {
     y,
     width,
     height,
+    viewportPos,
     mousePos,
   }
 })

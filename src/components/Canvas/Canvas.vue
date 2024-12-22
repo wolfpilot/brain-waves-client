@@ -35,25 +35,31 @@ const ctx: Ref<CanvasRenderingContext2D | null> = ref(null)
 
 const wrapperBounds: Ref<DOMRect | null> = ref(null)
 const gridBounds: Ref<DOMRect | null> = ref(null)
-const viewportPos = ref<Coords | null>({
-  x: 0,
-  y: 0,
-})
 
 const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
 const updateBounds = () => {
   if (!wrapperRef.value || !gridRef.value) return
 
+  const cssVars = getCssVars()
+
+  const cssSiteHeaderHeight = cssVars.get("--size-siteHeaderHeight")
+  const cssSiteFooterHeight = cssVars.get("--size-siteFooterHeight")
+
+  if (!cssSiteHeaderHeight || !cssSiteFooterHeight) return
+
+  const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
+  const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
+
   wrapperBounds.value = wrapperRef.value.getBoundingClientRect()
   gridBounds.value = gridRef.value.getBoundingClientRect()
 
   canvasStore.$patch({
-    cssVars: getCssVars(),
+    cssVars,
     x: wrapperBounds.value.x,
     y: wrapperBounds.value.y,
-    width: wrapperBounds.value.width,
-    height: wrapperBounds.value.height,
+    width: window.innerWidth,
+    height: window.innerHeight - siteHeaderHeight - siteFooterHeight,
   })
 }
 
@@ -65,7 +71,7 @@ const centreGrid = () => {
 
   gridRef.value.style.transform = `translate(${newX}px, ${newY}px)`
 
-  viewportPos.value = {
+  canvasStore.viewportPos = {
     x: newX,
     y: newY,
   }
@@ -84,10 +90,10 @@ const panCanvas = (state: Coords | null, prevState: Coords | null) => {
   if (
     !state ||
     !prevState ||
-    !viewportPos.value ||
     !gridRef.value ||
     !gridBounds.value ||
-    !canvasStore.cssVars
+    !canvasStore.cssVars ||
+    !canvasStore.viewportPos
   ) {
     return
   }
@@ -103,8 +109,8 @@ const panCanvas = (state: Coords | null, prevState: Coords | null) => {
   const dX = state.x - prevState.x
   const dY = state.y - prevState.y
 
-  const newX = viewportPos.value.x + dX
-  const newY = viewportPos.value.y + dY
+  const newX = canvasStore.viewportPos.x + dX
+  const newY = canvasStore.viewportPos.y + dY
 
   const finalX =
     // Check if outside left bounds
@@ -126,7 +132,7 @@ const panCanvas = (state: Coords | null, prevState: Coords | null) => {
         : // else assign the newly calculated coords
           newY
 
-  viewportPos.value = {
+  canvasStore.viewportPos = {
     x: finalX,
     y: finalY,
   }

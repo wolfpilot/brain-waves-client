@@ -16,6 +16,10 @@ import { clientRoutes } from "@constants/routes.constants"
 
 <style lang="css" module>
 .wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   height: var(--size-siteHeaderHeight);
   padding: var(--spacing-small) var(--spacing-default);
