@@ -45,18 +45,30 @@ const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map()
 const updateBounds = () => {
   if (!wrapperRef.value || !gridRef.value) return
 
-  const cssVars = getCssVars()
-
   wrapperBounds.value = wrapperRef.value.getBoundingClientRect()
   gridBounds.value = gridRef.value.getBoundingClientRect()
 
   canvasStore.$patch({
-    cssVars,
+    cssVars: getCssVars(),
     x: wrapperBounds.value.x,
     y: wrapperBounds.value.y,
     width: wrapperBounds.value.width,
     height: wrapperBounds.value.height,
   })
+}
+
+const centreGrid = () => {
+  if (!wrapperBounds.value || !gridBounds.value || !gridRef.value) return
+
+  const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
+  const newY = wrapperBounds.value.height / 2 - gridBounds.value.height / 2
+
+  gridRef.value.style.transform = `translate(${newX}px, ${newY}px)`
+
+  viewportPos.value = {
+    x: newX,
+    y: newY,
+  }
 }
 
 const bindListeners = () => {
@@ -157,6 +169,7 @@ onMounted(() => {
   if (!ctx.value) return
 
   updateBounds()
+  centreGrid()
   bindListeners()
 })
 
