@@ -38,6 +38,7 @@ const gridBounds: Ref<DOMRect | null> = ref(null)
 
 const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
+// Helpers
 const updateBounds = () => {
   if (!wrapperRef.value || !gridRef.value) return
 
@@ -86,11 +87,12 @@ const bindListeners = () => {
   useEventListener(window, "mousemove", handleMouseMove)
 }
 
-const panCanvas = (state: Coords | null, prevState: Coords | null) => {
+const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   if (
-    !state ||
-    !prevState ||
+    !mousePos ||
+    !prevMousePos ||
     !gridRef.value ||
+    !wrapperBounds.value ||
     !gridBounds.value ||
     !canvasStore.cssVars ||
     !canvasStore.viewportPos
@@ -106,31 +108,37 @@ const panCanvas = (state: Coords | null, prevState: Coords | null) => {
   const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
   const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
 
-  const dX = state.x - prevState.x
-  const dY = state.y - prevState.y
+  const dX = mousePos.x - prevMousePos.x
+  const dY = mousePos.y - prevMousePos.y
 
   const newX = canvasStore.viewportPos.x + dX
   const newY = canvasStore.viewportPos.y + dY
 
   const finalX =
-    // Check if outside left bounds
-    newX > 0
-      ? 0
-      : // or outside right bounds
-        newX < window.innerWidth - gridBounds.value.width
-        ? window.innerWidth - gridBounds.value.width
-        : // else assign the newly calculated coords
-          newX
+    // Check if the viewport is smaller than the window
+    gridBounds.value.width < window.innerWidth
+      ? wrapperBounds.value.width / 2 - gridBounds.value.width / 2
+      : // or if outside left bounds
+        newX > 0
+        ? 0
+        : // or outside right bounds
+          newX < window.innerWidth - gridBounds.value.width
+          ? window.innerWidth - gridBounds.value.width
+          : // else assign the newly calculated coords
+            newX
 
   const finalY =
-    // Check if outside top bounds
-    newY > siteHeaderHeight
-      ? siteHeaderHeight
-      : // or outside bottom bounds
-        newY < window.innerHeight - siteFooterHeight - gridBounds.value.height
-        ? window.innerHeight - siteFooterHeight - gridBounds.value.height
-        : // else assign the newly calculated coords
-          newY
+    // Check if the viewport is smaller than the window
+    gridBounds.value.height < window.innerHeight
+      ? wrapperBounds.value.height / 2 - gridBounds.value.height / 2
+      : // or if outside top bounds
+        newY > siteHeaderHeight
+        ? siteHeaderHeight
+        : // or outside bottom bounds
+          newY < window.innerHeight - siteFooterHeight - gridBounds.value.height
+          ? window.innerHeight - siteFooterHeight - gridBounds.value.height
+          : // else assign the newly calculated coords
+            newY
 
   canvasStore.viewportPos = {
     x: finalX,
