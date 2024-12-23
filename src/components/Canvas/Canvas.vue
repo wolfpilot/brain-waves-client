@@ -158,16 +158,12 @@ const handleOnResize = useDebounceFn(() => {
 }, DEBOUNCE_RESIZE_MS)
 
 const handleMouseDown = (e: MouseEvent) => {
-  e.preventDefault()
-
   const activeBtn = MouseKeyToValue[e.button as MouseBtnKeys]
 
   activeMouseButtons.set(activeBtn, true)
 }
 
 const handleMouseUp = (e: MouseEvent) => {
-  e.preventDefault()
-
   const activeBtn = MouseKeyToValue[e.button as MouseBtnKeys]
 
   activeMouseButtons.set(activeBtn, false)
