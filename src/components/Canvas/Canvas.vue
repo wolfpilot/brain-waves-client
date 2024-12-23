@@ -19,6 +19,10 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { getCssVars } from "@utils/helpers/dom.helpers"
+import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+
+// Components
+import { Toolbar } from "@components/gui"
 
 // Setup
 const DEBOUNCE_RESIZE_MS = 500
@@ -196,6 +200,17 @@ watch(mousePos, (state, prevState) => {
       return
   }
 })
+
+canvasStore.$onAction(({ name }) => {
+  switch (name) {
+    case "actionCentre":
+      centreGrid()
+      break
+    default:
+      assertExhaustiveGuard(name)
+      break
+  }
+})
 </script>
 
 <template>
@@ -203,6 +218,7 @@ watch(mousePos, (state, prevState) => {
     ref="wrapperRef"
     :class="[$style.wrapper, activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]"
   >
+    <Toolbar />
     <div ref="gridRef" :class="$style.grid" />
     <canvas ref="canvasRef" :width="canvasStore.width || 0" :height="canvasStore.height || 0" />
   </div>
@@ -210,6 +226,7 @@ watch(mousePos, (state, prevState) => {
 
 <style lang="css" module>
 .wrapper {
+  position: relative;
   flex: 1;
 }
 
