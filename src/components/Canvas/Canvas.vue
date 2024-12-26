@@ -19,6 +19,10 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { getCssVars } from "@utils/helpers/dom.helpers"
+import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+
+// Components
+import { Toolbar } from "@components/gui"
 
 // Setup
 const DEBOUNCE_RESIZE_MS = 500
@@ -132,11 +136,11 @@ const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
     gridBounds.value.height < window.innerHeight
       ? wrapperBounds.value.height / 2 - gridBounds.value.height / 2
       : // or if outside top bounds
-        newY > siteHeaderHeight
-        ? siteHeaderHeight
+        newY > 0
+        ? 0
         : // or outside bottom bounds
-          newY < window.innerHeight - siteFooterHeight - gridBounds.value.height
-          ? window.innerHeight - siteFooterHeight - gridBounds.value.height
+          newY < window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
+          ? window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
           : // else assign the newly calculated coords
             newY
 
@@ -154,16 +158,12 @@ const handleOnResize = useDebounceFn(() => {
 }, DEBOUNCE_RESIZE_MS)
 
 const handleMouseDown = (e: MouseEvent) => {
-  e.preventDefault()
-
   const activeBtn = MouseKeyToValue[e.button as MouseBtnKeys]
 
   activeMouseButtons.set(activeBtn, true)
 }
 
 const handleMouseUp = (e: MouseEvent) => {
-  e.preventDefault()
-
   const activeBtn = MouseKeyToValue[e.button as MouseBtnKeys]
 
   activeMouseButtons.set(activeBtn, false)
@@ -196,6 +196,17 @@ watch(mousePos, (state, prevState) => {
       return
   }
 })
+
+canvasStore.$onAction(({ name }) => {
+  switch (name) {
+    case "actionCentre":
+      centreGrid()
+      break
+    default:
+      assertExhaustiveGuard(name)
+      break
+  }
+})
 </script>
 
 <template>
@@ -203,6 +214,7 @@ watch(mousePos, (state, prevState) => {
     ref="wrapperRef"
     :class="[$style.wrapper, activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]"
   >
+    <Toolbar />
     <div ref="gridRef" :class="$style.grid" />
     <canvas ref="canvasRef" :width="canvasStore.width || 0" :height="canvasStore.height || 0" />
   </div>
@@ -210,6 +222,7 @@ watch(mousePos, (state, prevState) => {
 
 <style lang="css" module>
 .wrapper {
+  position: relative;
   flex: 1;
 }
 
