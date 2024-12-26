@@ -136,11 +136,11 @@ const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
     gridBounds.value.height < window.innerHeight
       ? wrapperBounds.value.height / 2 - gridBounds.value.height / 2
       : // or if outside top bounds
-        newY > siteHeaderHeight
-        ? siteHeaderHeight
+        newY > 0
+        ? 0
         : // or outside bottom bounds
-          newY < window.innerHeight - siteFooterHeight - gridBounds.value.height
-          ? window.innerHeight - siteFooterHeight - gridBounds.value.height
+          newY < window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
+          ? window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
           : // else assign the newly calculated coords
             newY
 
