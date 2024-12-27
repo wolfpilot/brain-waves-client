@@ -6,6 +6,9 @@ import { useEventListener, useDebounceFn, useThrottleFn } from "@vueuse/core"
 // Types
 import { type Coords } from "@ts/math.types"
 
+// Configs
+import { config as canvasConfig } from "@configs/canvas.config"
+
 // Stores
 import { useCanvasStore } from "@stores/index"
 
@@ -80,6 +83,39 @@ const centreGrid = () => {
     x: newX,
     y: newY,
   }
+}
+
+const zoom = (level: number) => {
+  if (!gridRef.value) return
+
+  const cssVars = getCssVars()
+
+  const cssBgTileSize = cssVars.get("--canvas-bg-tile-size-px")
+
+  if (!cssBgTileSize) return
+
+  const defaultTileSize = parseInt(cssBgTileSize as string, 10)
+  const newTileSize = (1 + level * canvasConfig.zoom.stepSize) * defaultTileSize
+
+  gridRef.value.style.backgroundSize = `${newTileSize}px ${newTileSize}px`
+
+  canvasStore.zoomLevel = level
+}
+
+const zoomIn = () => {
+  const newLevel = canvasStore.zoomLevel + 1
+
+  if (newLevel > canvasConfig.zoom.max) return
+
+  zoom(newLevel)
+}
+
+const zoomOut = () => {
+  const newLevel = canvasStore.zoomLevel - 1
+
+  if (newLevel < canvasConfig.zoom.min) return
+
+  zoom(newLevel)
 }
 
 const bindListeners = () => {
@@ -201,6 +237,12 @@ canvasStore.$onAction(({ name }) => {
   switch (name) {
     case "actionCentre":
       centreGrid()
+      break
+    case "actionZoomIn":
+      zoomIn()
+      break
+    case "actionZoomOut":
+      zoomOut()
       break
     default:
       assertExhaustiveGuard(name)
