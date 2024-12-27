@@ -125,6 +125,7 @@ const bindListeners = () => {
   useEventListener(canvasRef, "mousedown", handleMouseDown)
   useEventListener(window, "mouseup", handleMouseUp)
   useEventListener(window, "mousemove", handleMouseMove)
+  useEventListener(canvasRef, "wheel", handleWheel)
 }
 
 const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
@@ -211,6 +212,14 @@ const handleMouseMove = useThrottleFn((e: MouseEvent) => {
     y: e.clientY,
   }
 }, THROTTLE_MOUSE_MOVE_MS)
+
+const handleWheel = (e: WheelEvent) => {
+  if (e.deltaY < 0) {
+    zoomIn()
+  } else {
+    zoomOut()
+  }
+}
 
 // Lifecycle
 onMounted(() => {
