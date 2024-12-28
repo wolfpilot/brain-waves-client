@@ -7,14 +7,14 @@ import { type Coords } from "@ts/math.types"
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
-export type CANVAS_CENTRE = "CANVAS/CENTRE"
+export type CANVAS_RESET = "CANVAS/RESET"
 export type CANVAS_ZOOM_IN = "CANVAS/ZOOM_IN"
 export type CANVAS_ZOOM_OUT = "CANVAS/ZOOM_OUT"
 
-export type ACTIONS_CANVAS = CANVAS_CENTRE | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
+export type ACTIONS_CANVAS = CANVAS_RESET | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
 
-export interface ACTION_CANVAS_CENTRE {
-  type: CANVAS_CENTRE
+export interface ACTION_CANVAS_RESET {
+  type: CANVAS_RESET
 }
 
 export interface ACTION_CANVAS_ZOOM_IN {
@@ -25,7 +25,7 @@ export interface ACTION_CANVAS_ZOOM_OUT {
   type: CANVAS_ZOOM_OUT
 }
 
-export type ACTION_CANVAS = ACTION_CANVAS_CENTRE | ACTION_CANVAS_ZOOM_IN | ACTION_CANVAS_ZOOM_OUT
+export type ACTION_CANVAS = ACTION_CANVAS_RESET | ACTION_CANVAS_ZOOM_IN | ACTION_CANVAS_ZOOM_OUT
 
 export const useCanvasStore = defineStore("canvas", () => {
   const cssVars = ref<Map<string, CSSUnparsedSegment> | null>(null)
@@ -37,8 +37,8 @@ export const useCanvasStore = defineStore("canvas", () => {
   const mousePos = ref<Coords | null>(null)
   const zoomLevel = ref<number>(canvasConfig.zoom.default)
 
-  const actionCentre = (): ACTION_CANVAS_CENTRE => ({
-    type: "CANVAS/CENTRE",
+  const actionReset = (): ACTION_CANVAS_RESET => ({
+    type: "CANVAS/RESET",
   })
 
   const actionZoomIn = (): ACTION_CANVAS_ZOOM_IN => ({
@@ -58,7 +58,7 @@ export const useCanvasStore = defineStore("canvas", () => {
     viewportPos,
     mousePos,
     zoomLevel,
-    actionCentre,
+    actionReset,
     actionZoomIn,
     actionZoomOut,
   }

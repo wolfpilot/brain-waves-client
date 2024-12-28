@@ -73,11 +73,23 @@ const updateBounds = () => {
   })
 }
 
+const move = ({ x, y }: Coords) => {
+  if (!gridRef.value) return
+
+  // Apply transforms
+  gridRef.value.style.transform = `translate(${x}px, ${y}px)`
+
+  // Update store
+  canvasStore.viewportPos = {
+    x,
+    y,
+  }
+}
+
 const pan = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   if (
     !mousePos ||
     !prevMousePos ||
-    !gridRef.value ||
     !wrapperBounds.value ||
     !gridBounds.value ||
     !canvasStore.cssVars ||
@@ -127,29 +139,23 @@ const pan = (mousePos: Coords | null, prevMousePos: Coords | null) => {
             newY
 
   // Apply transforms
-  gridRef.value.style.transform = `translate(${finalX}px, ${finalY}px)`
-
-  // Update store
-  canvasStore.viewportPos = {
+  move({
     x: finalX,
     y: finalY,
-  }
+  })
 }
 
 const centre = () => {
-  if (!wrapperBounds.value || !gridBounds.value || !gridRef.value) return
+  if (!wrapperBounds.value || !gridBounds.value) return
 
   const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
   const newY = wrapperBounds.value.height / 2 - gridBounds.value.height / 2
 
   // Apply transforms
-  gridRef.value.style.transform = `translate(${newX}px, ${newY}px)`
-
-  // Update store
-  canvasStore.viewportPos = {
+  move({
     x: newX,
     y: newY,
-  }
+  })
 }
 
 const zoom = (level: number) => {
@@ -197,6 +203,17 @@ const zoomOut = () => {
   if (newLevel < canvasConfig.zoom.min) return
 
   zoom(newLevel)
+}
+
+const reset = () => {
+  /**
+   * NOTE: Need to maintain call order.
+   *
+   * Logically, it makes sense to first reset the zoom levels,
+   * only then centre the canvas.
+   */
+  zoom(canvasConfig.zoom.default)
+  centre()
 }
 
 // Handlers
@@ -264,8 +281,8 @@ watch(mousePos, (state, prevState) => {
 
 canvasStore.$onAction(({ name }) => {
   switch (name) {
-    case "actionCentre":
-      centre()
+    case "actionReset":
+      reset()
       break
     case "actionZoomIn":
       zoomIn()

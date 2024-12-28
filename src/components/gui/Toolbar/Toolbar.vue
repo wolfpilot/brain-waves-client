@@ -10,7 +10,7 @@ const canvasStore = useCanvasStore()
 <template>
   <aside :class="$style.wrapper">
     <div :class="$style.btnGroup">
-      <button :class="$style.btn" title="Centre canvas" @click="canvasStore.actionCentre">
+      <button :class="$style.btn" title="Reset canvas" @click="canvasStore.actionReset">
         <ViewfinderCircleIcon :class="$style.btnIcon" />
       </button>
 
