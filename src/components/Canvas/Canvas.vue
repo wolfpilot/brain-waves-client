@@ -73,7 +73,70 @@ const updateBounds = () => {
   })
 }
 
-const centreGrid = () => {
+const pan = (mousePos: Coords | null, prevMousePos: Coords | null) => {
+  if (
+    !mousePos ||
+    !prevMousePos ||
+    !gridRef.value ||
+    !wrapperBounds.value ||
+    !gridBounds.value ||
+    !canvasStore.cssVars ||
+    !canvasStore.viewportPos
+  ) {
+    return
+  }
+
+  const cssSiteHeaderHeight = canvasStore.cssVars.get("--size-siteHeaderHeight")
+  const cssSiteFooterHeight = canvasStore.cssVars.get("--size-siteFooterHeight")
+
+  if (!cssSiteHeaderHeight || !cssSiteFooterHeight) return
+
+  const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
+  const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
+
+  const dX = mousePos.x - prevMousePos.x
+  const dY = mousePos.y - prevMousePos.y
+
+  const newX = canvasStore.viewportPos.x + dX
+  const newY = canvasStore.viewportPos.y + dY
+
+  const finalX =
+    // Check if the viewport is smaller than the window
+    gridBounds.value.width < window.innerWidth
+      ? wrapperBounds.value.width / 2 - gridBounds.value.width / 2
+      : // or if outside left bounds
+        newX > 0
+        ? 0
+        : // or outside right bounds
+          newX < window.innerWidth - gridBounds.value.width
+          ? window.innerWidth - gridBounds.value.width
+          : // else assign the newly calculated coords
+            newX
+
+  const finalY =
+    // Check if the viewport is smaller than the window
+    gridBounds.value.height < window.innerHeight
+      ? wrapperBounds.value.height / 2 - gridBounds.value.height / 2
+      : // or if outside top bounds
+        newY > 0
+        ? 0
+        : // or outside bottom bounds
+          newY < window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
+          ? window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
+          : // else assign the newly calculated coords
+            newY
+
+  // Apply transforms
+  gridRef.value.style.transform = `translate(${finalX}px, ${finalY}px)`
+
+  // Update store
+  canvasStore.viewportPos = {
+    x: finalX,
+    y: finalY,
+  }
+}
+
+const centre = () => {
   if (!wrapperBounds.value || !gridBounds.value || !gridRef.value) return
 
   const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
@@ -136,77 +199,8 @@ const zoomOut = () => {
   zoom(newLevel)
 }
 
-const bindListeners = () => {
-  if (!canvasRef.value) return
-
-  useEventListener(window, "resize", handleOnResize)
-  useEventListener(canvasRef, "mousedown", handleMouseDown)
-  useEventListener(window, "mouseup", handleMouseUp)
-  useEventListener(window, "mousemove", handleMouseMove)
-  useEventListener(canvasRef, "wheel", handleWheel)
-}
-
-const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
-  if (
-    !mousePos ||
-    !prevMousePos ||
-    !gridRef.value ||
-    !wrapperBounds.value ||
-    !gridBounds.value ||
-    !canvasStore.cssVars ||
-    !canvasStore.viewportPos
-  ) {
-    return
-  }
-
-  const cssSiteHeaderHeight = canvasStore.cssVars.get("--size-siteHeaderHeight")
-  const cssSiteFooterHeight = canvasStore.cssVars.get("--size-siteFooterHeight")
-
-  if (!cssSiteHeaderHeight || !cssSiteFooterHeight) return
-
-  const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
-  const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
-
-  const dX = mousePos.x - prevMousePos.x
-  const dY = mousePos.y - prevMousePos.y
-
-  const newX = canvasStore.viewportPos.x + dX
-  const newY = canvasStore.viewportPos.y + dY
-
-  const finalX =
-    // Check if the viewport is smaller than the window
-    gridBounds.value.width < window.innerWidth
-      ? wrapperBounds.value.width / 2 - gridBounds.value.width / 2
-      : // or if outside left bounds
-        newX > 0
-        ? 0
-        : // or outside right bounds
-          newX < window.innerWidth - gridBounds.value.width
-          ? window.innerWidth - gridBounds.value.width
-          : // else assign the newly calculated coords
-            newX
-
-  const finalY =
-    // Check if the viewport is smaller than the window
-    gridBounds.value.height < window.innerHeight
-      ? wrapperBounds.value.height / 2 - gridBounds.value.height / 2
-      : // or if outside top bounds
-        newY > 0
-        ? 0
-        : // or outside bottom bounds
-          newY < window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
-          ? window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
-          : // else assign the newly calculated coords
-            newY
-
-  canvasStore.viewportPos = {
-    x: finalX,
-    y: finalY,
-  }
-}
-
 // Handlers
-const handleOnResize = useDebounceFn(() => {
+const handleResize = useDebounceFn(() => {
   updateBounds()
 }, DEBOUNCE_RESIZE_MS)
 
@@ -237,6 +231,16 @@ const handleWheel = (e: WheelEvent) => {
   }
 }
 
+const bindListeners = () => {
+  if (!canvasRef.value) return
+
+  useEventListener(window, "resize", handleResize)
+  useEventListener(canvasRef, "mousedown", handleMouseDown)
+  useEventListener(window, "mouseup", handleMouseUp)
+  useEventListener(window, "mousemove", handleMouseMove)
+  useEventListener(canvasRef, "wheel", handleWheel)
+}
+
 // Lifecycle
 onMounted(() => {
   ctx.value = canvasRef.value?.getContext("2d") || null
@@ -244,14 +248,14 @@ onMounted(() => {
   if (!ctx.value) return
 
   updateBounds()
-  centreGrid()
+  centre()
   bindListeners()
 })
 
 watch(mousePos, (state, prevState) => {
   switch (true) {
     case activeMouseButtons.get("middle"):
-      panCanvas(state, prevState)
+      pan(state, prevState)
       return
     default:
       return
@@ -261,7 +265,7 @@ watch(mousePos, (state, prevState) => {
 canvasStore.$onAction(({ name }) => {
   switch (name) {
     case "actionCentre":
-      centreGrid()
+      centre()
       break
     case "actionZoomIn":
       zoomIn()
