@@ -21,7 +21,7 @@ import {
 import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
-import { getCssVars } from "@utils/helpers/dom.helpers"
+import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 
 // Components
@@ -59,9 +59,11 @@ const updateBounds = () => {
   const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
   const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
 
+  // Update local state
   wrapperBounds.value = wrapperRef.value.getBoundingClientRect()
   gridBounds.value = gridRef.value.getBoundingClientRect()
 
+  // Update store
   canvasStore.$patch({
     cssVars,
     x: wrapperBounds.value.x,
@@ -77,8 +79,10 @@ const centreGrid = () => {
   const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
   const newY = wrapperBounds.value.height / 2 - gridBounds.value.height / 2
 
+  // Apply transforms
   gridRef.value.style.transform = `translate(${newX}px, ${newY}px)`
 
+  // Update store
   canvasStore.viewportPos = {
     x: newX,
     y: newY,
@@ -86,20 +90,34 @@ const centreGrid = () => {
 }
 
 const zoom = (level: number) => {
-  if (!gridRef.value) return
+  if (!gridRef.value || !canvasStore.cssVars) return
 
-  const cssVars = getCssVars()
+  const modifier = 1 + level * canvasConfig.zoom.stepSize
 
-  const cssBgTileSize = cssVars.get("--canvas-bg-tile-size-px")
+  const newTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
+  const newMaxWidth = Math.round(modifier * canvasConfig.dimensions.maxWidth)
+  const newMaxHeight = Math.round(modifier * canvasConfig.dimensions.maxHeight)
 
-  if (!cssBgTileSize) return
+  // Bundle Map updates
+  const newCssVars = new Map([...canvasStore.cssVars])
 
-  const defaultTileSize = parseInt(cssBgTileSize as string, 10)
-  const newTileSize = (1 + level * canvasConfig.zoom.stepSize) * defaultTileSize
+  newCssVars.set("--canvas-bg-tile-size-px", `${newTileSize}px`)
+  newCssVars.set("--canvas-max-width", `${newMaxWidth}px`)
+  newCssVars.set("--canvas-max-height", `${newMaxHeight}px`)
 
-  gridRef.value.style.backgroundSize = `${newTileSize}px ${newTileSize}px`
+  // Update CSS vars
+  setCssVar("--canvas-bg-tile-size-px", `${newTileSize}px`)
+  setCssVar("--canvas-max-width", `${newMaxWidth}px`)
+  setCssVar("--canvas-max-height", `${newMaxHeight}px`)
 
-  canvasStore.zoomLevel = level
+  // Update local state
+  gridBounds.value = gridRef.value.getBoundingClientRect()
+
+  // Update store
+  canvasStore.$patch({
+    cssVars: newCssVars,
+    zoomLevel: level,
+  })
 }
 
 const zoomIn = () => {
@@ -185,8 +203,6 @@ const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
     x: finalX,
     y: finalY,
   }
-
-  gridRef.value.style.transform = `translate(${finalX}px, ${finalY}px)`
 }
 
 // Handlers
