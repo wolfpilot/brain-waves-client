@@ -4,15 +4,28 @@ import { defineStore } from "pinia"
 // Types
 import { type Coords } from "@ts/math.types"
 
-export type CANVAS_CENTRE = "CANVAS/CENTRE"
+// Configs
+import { config as canvasConfig } from "@configs/canvas.config"
 
-export type ACTIONS_CANVAS = CANVAS_CENTRE
+export type CANVAS_RESET = "CANVAS/RESET"
+export type CANVAS_ZOOM_IN = "CANVAS/ZOOM_IN"
+export type CANVAS_ZOOM_OUT = "CANVAS/ZOOM_OUT"
 
-export interface ACTION_CANVAS_CENTRE {
-  type: CANVAS_CENTRE
+export type ACTIONS_CANVAS = CANVAS_RESET | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
+
+export interface ACTION_CANVAS_RESET {
+  type: CANVAS_RESET
 }
 
-export type ACTION_CANVAS = ACTION_CANVAS_CENTRE
+export interface ACTION_CANVAS_ZOOM_IN {
+  type: CANVAS_ZOOM_IN
+}
+
+export interface ACTION_CANVAS_ZOOM_OUT {
+  type: CANVAS_ZOOM_OUT
+}
+
+export type ACTION_CANVAS = ACTION_CANVAS_RESET | ACTION_CANVAS_ZOOM_IN | ACTION_CANVAS_ZOOM_OUT
 
 export const useCanvasStore = defineStore("canvas", () => {
   const cssVars = ref<Map<string, CSSUnparsedSegment> | null>(null)
@@ -22,9 +35,18 @@ export const useCanvasStore = defineStore("canvas", () => {
   const height = ref<number | null>(null)
   const viewportPos = ref<Coords | null>(null)
   const mousePos = ref<Coords | null>(null)
+  const zoomLevel = ref<number>(canvasConfig.zoom.default)
 
-  const actionCentre = (): ACTION_CANVAS_CENTRE => ({
-    type: "CANVAS/CENTRE",
+  const actionReset = (): ACTION_CANVAS_RESET => ({
+    type: "CANVAS/RESET",
+  })
+
+  const actionZoomIn = (): ACTION_CANVAS_ZOOM_IN => ({
+    type: "CANVAS/ZOOM_IN",
+  })
+
+  const actionZoomOut = (): ACTION_CANVAS_ZOOM_OUT => ({
+    type: "CANVAS/ZOOM_OUT",
   })
 
   return {
@@ -35,7 +57,10 @@ export const useCanvasStore = defineStore("canvas", () => {
     height,
     viewportPos,
     mousePos,
-    actionCentre,
+    zoomLevel,
+    actionReset,
+    actionZoomIn,
+    actionZoomOut,
   }
 })
 

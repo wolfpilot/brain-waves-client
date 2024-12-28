@@ -11,6 +11,7 @@ export default defineConfig({
     alias: {
       "@assets": fileURLToPath(new URL("./src/assets", import.meta.url)),
       "@components": fileURLToPath(new URL("./src/components", import.meta.url)),
+      "@configs": fileURLToPath(new URL("./src/configs", import.meta.url)),
       "@constants": fileURLToPath(new URL("./src/constants", import.meta.url)),
       "@router": fileURLToPath(new URL("./src/router", import.meta.url)),
       "@stores": fileURLToPath(new URL("./src/stores", import.meta.url)),

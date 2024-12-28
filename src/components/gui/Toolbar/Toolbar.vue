@@ -1,21 +1,25 @@
 <script setup lang="ts">
-import { ViewfinderCircleIcon } from "@heroicons/vue/24/outline"
+import { PlusIcon, MinusIcon, ViewfinderCircleIcon } from "@heroicons/vue/24/outline"
 
 // Stores
 import { useCanvasStore } from "@stores/canvas.stores"
 
 const canvasStore = useCanvasStore()
-
-const onCentreCanvasClick = () => {
-  canvasStore.actionCentre()
-}
 </script>
 
 <template>
   <aside :class="$style.wrapper">
     <div :class="$style.btnGroup">
-      <button :class="$style.btn" title="Centre canvas" @click="onCentreCanvasClick">
+      <button :class="$style.btn" title="Reset canvas" @click="canvasStore.actionReset">
         <ViewfinderCircleIcon :class="$style.btnIcon" />
+      </button>
+
+      <button :class="$style.btn" title="Zoom in" @click="canvasStore.actionZoomIn">
+        <PlusIcon :class="$style.btnIcon" />
+      </button>
+
+      <button :class="$style.btn" title="Zoom out" @click="canvasStore.actionZoomOut">
+        <MinusIcon :class="$style.btnIcon" />
       </button>
     </div>
   </aside>

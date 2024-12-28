@@ -6,6 +6,9 @@ import { useEventListener, useDebounceFn, useThrottleFn } from "@vueuse/core"
 // Types
 import { type Coords } from "@ts/math.types"
 
+// Configs
+import { config as canvasConfig } from "@configs/canvas.config"
+
 // Stores
 import { useCanvasStore } from "@stores/index"
 
@@ -18,7 +21,7 @@ import {
 import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
-import { getCssVars } from "@utils/helpers/dom.helpers"
+import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 
 // Components
@@ -56,9 +59,11 @@ const updateBounds = () => {
   const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
   const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
 
+  // Update local state
   wrapperBounds.value = wrapperRef.value.getBoundingClientRect()
   gridBounds.value = gridRef.value.getBoundingClientRect()
 
+  // Update store
   canvasStore.$patch({
     cssVars,
     x: wrapperBounds.value.x,
@@ -68,34 +73,23 @@ const updateBounds = () => {
   })
 }
 
-const centreGrid = () => {
-  if (!wrapperBounds.value || !gridBounds.value || !gridRef.value) return
+const move = ({ x, y }: Coords) => {
+  if (!gridRef.value) return
 
-  const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
-  const newY = wrapperBounds.value.height / 2 - gridBounds.value.height / 2
+  // Apply transforms
+  gridRef.value.style.transform = `translate(${x}px, ${y}px)`
 
-  gridRef.value.style.transform = `translate(${newX}px, ${newY}px)`
-
+  // Update store
   canvasStore.viewportPos = {
-    x: newX,
-    y: newY,
+    x,
+    y,
   }
 }
 
-const bindListeners = () => {
-  if (!canvasRef.value) return
-
-  useEventListener(window, "resize", handleOnResize)
-  useEventListener(canvasRef, "mousedown", handleMouseDown)
-  useEventListener(window, "mouseup", handleMouseUp)
-  useEventListener(window, "mousemove", handleMouseMove)
-}
-
-const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
+const pan = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   if (
     !mousePos ||
     !prevMousePos ||
-    !gridRef.value ||
     !wrapperBounds.value ||
     !gridBounds.value ||
     !canvasStore.cssVars ||
@@ -144,16 +138,86 @@ const panCanvas = (mousePos: Coords | null, prevMousePos: Coords | null) => {
           : // else assign the newly calculated coords
             newY
 
-  canvasStore.viewportPos = {
+  // Apply transforms
+  move({
     x: finalX,
     y: finalY,
-  }
+  })
+}
 
-  gridRef.value.style.transform = `translate(${finalX}px, ${finalY}px)`
+const centre = () => {
+  if (!wrapperBounds.value || !gridBounds.value) return
+
+  const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
+  const newY = wrapperBounds.value.height / 2 - gridBounds.value.height / 2
+
+  // Apply transforms
+  move({
+    x: newX,
+    y: newY,
+  })
+}
+
+const zoom = (level: number) => {
+  if (!gridRef.value || !canvasStore.cssVars) return
+
+  const modifier = 1 + level * canvasConfig.zoom.stepSize
+
+  const newTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
+  const newMaxWidth = Math.round(modifier * canvasConfig.dimensions.maxWidth)
+  const newMaxHeight = Math.round(modifier * canvasConfig.dimensions.maxHeight)
+
+  // Bundle Map updates
+  const newCssVars = new Map([...canvasStore.cssVars])
+
+  newCssVars.set("--canvas-bg-tile-size-px", `${newTileSize}px`)
+  newCssVars.set("--canvas-max-width", `${newMaxWidth}px`)
+  newCssVars.set("--canvas-max-height", `${newMaxHeight}px`)
+
+  // Update CSS vars
+  setCssVar("--canvas-bg-tile-size-px", `${newTileSize}px`)
+  setCssVar("--canvas-max-width", `${newMaxWidth}px`)
+  setCssVar("--canvas-max-height", `${newMaxHeight}px`)
+
+  // Update local state
+  gridBounds.value = gridRef.value.getBoundingClientRect()
+
+  // Update store
+  canvasStore.$patch({
+    cssVars: newCssVars,
+    zoomLevel: level,
+  })
+}
+
+const zoomIn = () => {
+  const newLevel = canvasStore.zoomLevel + 1
+
+  if (newLevel > canvasConfig.zoom.max) return
+
+  zoom(newLevel)
+}
+
+const zoomOut = () => {
+  const newLevel = canvasStore.zoomLevel - 1
+
+  if (newLevel < canvasConfig.zoom.min) return
+
+  zoom(newLevel)
+}
+
+const reset = () => {
+  /**
+   * NOTE: Need to maintain call order.
+   *
+   * Logically, it makes sense to first reset the zoom levels,
+   * only then centre the canvas.
+   */
+  zoom(canvasConfig.zoom.default)
+  centre()
 }
 
 // Handlers
-const handleOnResize = useDebounceFn(() => {
+const handleResize = useDebounceFn(() => {
   updateBounds()
 }, DEBOUNCE_RESIZE_MS)
 
@@ -176,6 +240,24 @@ const handleMouseMove = useThrottleFn((e: MouseEvent) => {
   }
 }, THROTTLE_MOUSE_MOVE_MS)
 
+const handleWheel = (e: WheelEvent) => {
+  if (e.deltaY < 0) {
+    zoomIn()
+  } else {
+    zoomOut()
+  }
+}
+
+const bindListeners = () => {
+  if (!canvasRef.value) return
+
+  useEventListener(window, "resize", handleResize)
+  useEventListener(canvasRef, "mousedown", handleMouseDown)
+  useEventListener(window, "mouseup", handleMouseUp)
+  useEventListener(window, "mousemove", handleMouseMove)
+  useEventListener(canvasRef, "wheel", handleWheel)
+}
+
 // Lifecycle
 onMounted(() => {
   ctx.value = canvasRef.value?.getContext("2d") || null
@@ -183,14 +265,14 @@ onMounted(() => {
   if (!ctx.value) return
 
   updateBounds()
-  centreGrid()
+  centre()
   bindListeners()
 })
 
 watch(mousePos, (state, prevState) => {
   switch (true) {
     case activeMouseButtons.get("middle"):
-      panCanvas(state, prevState)
+      pan(state, prevState)
       return
     default:
       return
@@ -199,8 +281,14 @@ watch(mousePos, (state, prevState) => {
 
 canvasStore.$onAction(({ name }) => {
   switch (name) {
-    case "actionCentre":
-      centreGrid()
+    case "actionReset":
+      reset()
+      break
+    case "actionZoomIn":
+      zoomIn()
+      break
+    case "actionZoomOut":
+      zoomOut()
       break
     default:
       assertExhaustiveGuard(name)

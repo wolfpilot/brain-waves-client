@@ -38,3 +38,11 @@ export const getCssVars = (elem: HTMLElement = document.documentElement) => {
 
   return res
 }
+
+export const setCssVar = (
+  key: string,
+  value: string | null,
+  elem: HTMLElement = document.documentElement,
+) => {
+  elem.style.setProperty(key, value)
+}
