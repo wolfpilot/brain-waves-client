@@ -7,11 +7,16 @@ import { type Coords } from "@ts/math.types"
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
+export type CANVAS_ADD_RECTANGLE = "CANVAS/ADD_RECTANGLE"
 export type CANVAS_RESET = "CANVAS/RESET"
 export type CANVAS_ZOOM_IN = "CANVAS/ZOOM_IN"
 export type CANVAS_ZOOM_OUT = "CANVAS/ZOOM_OUT"
 
-export type ACTIONS_CANVAS = CANVAS_RESET | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
+export type ACTIONS_CANVAS = CANVAS_ADD_RECTANGLE | CANVAS_RESET | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
+
+export interface ACTION_CANVAS_ADD_RECTANGLE {
+  type: CANVAS_ADD_RECTANGLE
+}
 
 export interface ACTION_CANVAS_RESET {
   type: CANVAS_RESET
@@ -37,6 +42,10 @@ export const useCanvasStore = defineStore("canvas", () => {
   const mousePos = ref<Coords | null>(null)
   const zoomLevel = ref<number>(canvasConfig.zoom.default)
 
+  const actionAddRectangle = (): ACTION_CANVAS_ADD_RECTANGLE => ({
+    type: "CANVAS/ADD_RECTANGLE",
+  })
+
   const actionReset = (): ACTION_CANVAS_RESET => ({
     type: "CANVAS/RESET",
   })
@@ -58,6 +67,7 @@ export const useCanvasStore = defineStore("canvas", () => {
     viewportPos,
     mousePos,
     zoomLevel,
+    actionAddRectangle,
     actionReset,
     actionZoomIn,
     actionZoomOut,

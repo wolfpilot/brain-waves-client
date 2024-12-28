@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { PlusIcon, MinusIcon, ViewfinderCircleIcon } from "@heroicons/vue/24/outline"
+import { ViewfinderCircleIcon, PlusIcon, MinusIcon } from "@heroicons/vue/24/outline"
+
+// Assets
+import { SquareIcon } from "@components/icons"
 
 // Stores
 import { useCanvasStore } from "@stores/canvas.stores"
@@ -9,6 +12,12 @@ const canvasStore = useCanvasStore()
 
 <template>
   <aside :class="$style.wrapper">
+    <div :class="$style.btnGroup">
+      <button :class="$style.btn" title="Rectangle" @click="canvasStore.actionAddRectangle">
+        <SquareIcon :class="$style.btnIcon" />
+      </button>
+    </div>
+
     <div :class="$style.btnGroup">
       <button :class="$style.btn" title="Reset canvas" @click="canvasStore.actionReset">
         <ViewfinderCircleIcon :class="$style.btnIcon" />
@@ -40,6 +49,10 @@ const canvasStore = useCanvasStore()
   flex-direction: column;
   border: 1px solid var(--c-accent-4-50);
   border-radius: var(--border-radius-default);
+
+  &:not(:last-of-type) {
+    margin-bottom: var(--spacing-default);
+  }
 }
 
 .btn {
