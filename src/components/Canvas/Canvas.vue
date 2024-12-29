@@ -23,6 +23,8 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 // Utils
 import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+import Engine from "@utils/canvas/core/Engine.canvas"
+import { CanvasNode } from "@utils/canvas/nodes"
 
 // Components
 import { Toolbar } from "@components/gui"
@@ -46,6 +48,18 @@ const gridBounds: Ref<DOMRect | null> = ref(null)
 const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
 // Helpers
+const addRectangle = () => {
+  if (!ctx.value) return
+
+  const node = new CanvasNode({
+    ctx: ctx.value,
+    x: 200,
+    y: 200,
+  })
+
+  canvasStore.nodes.push(node)
+}
+
 const updateBounds = () => {
   if (!wrapperRef.value || !gridRef.value) return
 
@@ -267,6 +281,11 @@ onMounted(() => {
   updateBounds()
   centre()
   bindListeners()
+
+  // Initialize entities
+  const engine = new Engine()
+
+  engine.init()
 })
 
 watch(mousePos, (state, prevState) => {
@@ -281,6 +300,9 @@ watch(mousePos, (state, prevState) => {
 
 canvasStore.$onAction(({ name }) => {
   switch (name) {
+    case "actionAddRectangle":
+      addRectangle()
+      break
     case "actionReset":
       reset()
       break
