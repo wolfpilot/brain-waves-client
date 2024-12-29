@@ -3,6 +3,9 @@ export type NodeType = "rectangle" | "circle"
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 
+// Utils
+import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+
 export interface Props {
   ctx: CanvasRenderingContext2D
   type: NodeType
@@ -16,8 +19,13 @@ export interface CanvasNode {
 
 // Setup
 const defaults = {
-  width: 150,
-  height: 50,
+  rectangle: {
+    width: 150,
+    height: 50,
+  },
+  circle: {
+    radius: 100,
+  },
 }
 
 class CanvasNodeImpl implements CanvasNode {
@@ -26,8 +34,6 @@ class CanvasNodeImpl implements CanvasNode {
   private type: NodeType
   private x: number
   private y: number
-  private width: number
-  private height: number
   private fillColor: string | null
   private borderColor: string | null
   private borderRadius: number | null
@@ -38,8 +44,6 @@ class CanvasNodeImpl implements CanvasNode {
     this.type = type
     this.x = x
     this.y = y
-    this.width = defaults.width
-    this.height = defaults.height
     this.fillColor = null
     this.borderColor = null
     this.borderRadius = null
@@ -60,14 +64,42 @@ class CanvasNodeImpl implements CanvasNode {
   }
 
   public draw() {
+    switch (this.type) {
+      case "rectangle":
+        this.drawRectangle()
+        break
+      case "circle":
+        this.drawCircle()
+        break
+      default:
+        assertExhaustiveGuard(this.type)
+    }
+  }
+
+  private drawRectangle() {
     if (!this.fillColor || !this.borderColor || !this.borderRadius) return
 
     this.ctx.fillStyle = this.fillColor
     this.ctx.strokeStyle = this.borderColor
     this.ctx.beginPath()
-    this.ctx.roundRect(this.x, this.y, this.x + this.width, this.y + this.height, [
-      this.borderRadius,
-    ])
+    this.ctx.roundRect(
+      this.x,
+      this.y,
+      this.x + defaults.rectangle.width,
+      this.y + defaults.rectangle.height,
+      [this.borderRadius],
+    )
+    this.ctx.fill()
+    this.ctx.stroke()
+  }
+
+  private drawCircle() {
+    if (!this.fillColor || !this.borderColor || !this.borderRadius) return
+
+    this.ctx.fillStyle = this.fillColor
+    this.ctx.strokeStyle = this.borderColor
+    this.ctx.beginPath()
+    this.ctx.arc(this.x, this.y, defaults.circle.radius, 0, 2 * Math.PI)
     this.ctx.fill()
     this.ctx.stroke()
   }
