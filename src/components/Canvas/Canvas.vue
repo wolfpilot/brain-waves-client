@@ -53,6 +53,20 @@ const addRectangle = () => {
 
   const node = new CanvasNode({
     ctx: ctx.value,
+    type: "rectangle",
+    x: 200,
+    y: 200,
+  })
+
+  canvasStore.nodes.push(node)
+}
+
+const addCircle = () => {
+  if (!ctx.value) return
+
+  const node = new CanvasNode({
+    ctx: ctx.value,
+    type: "circle",
     x: 200,
     y: 200,
   })
@@ -302,6 +316,9 @@ canvasStore.$onAction(({ name }) => {
   switch (name) {
     case "actionAddRectangle":
       addRectangle()
+      break
+    case "actionAddCircle":
+      addCircle()
       break
     case "actionReset":
       reset()

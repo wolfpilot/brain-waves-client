@@ -11,14 +11,24 @@ import { config as canvasConfig } from "@configs/canvas.config"
 import { CanvasNode } from "@utils/canvas/nodes"
 
 export type CANVAS_ADD_RECTANGLE = "CANVAS/ADD_RECTANGLE"
+export type CANVAS_ADD_CIRCLE = "CANVAS/ADD_CIRCLE"
 export type CANVAS_RESET = "CANVAS/RESET"
 export type CANVAS_ZOOM_IN = "CANVAS/ZOOM_IN"
 export type CANVAS_ZOOM_OUT = "CANVAS/ZOOM_OUT"
 
-export type ACTIONS_CANVAS = CANVAS_ADD_RECTANGLE | CANVAS_RESET | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
+export type ACTIONS_CANVAS =
+  | CANVAS_ADD_RECTANGLE
+  | CANVAS_ADD_CIRCLE
+  | CANVAS_RESET
+  | CANVAS_ZOOM_IN
+  | CANVAS_ZOOM_OUT
 
 export interface ACTION_CANVAS_ADD_RECTANGLE {
   type: CANVAS_ADD_RECTANGLE
+}
+
+export interface ACTION_CANVAS_ADD_CIRCLE {
+  type: CANVAS_ADD_CIRCLE
 }
 
 export interface ACTION_CANVAS_RESET {
@@ -33,7 +43,12 @@ export interface ACTION_CANVAS_ZOOM_OUT {
   type: CANVAS_ZOOM_OUT
 }
 
-export type ACTION_CANVAS = ACTION_CANVAS_RESET | ACTION_CANVAS_ZOOM_IN | ACTION_CANVAS_ZOOM_OUT
+export type ACTION_CANVAS =
+  | ACTION_CANVAS_ADD_RECTANGLE
+  | ACTION_CANVAS_ADD_CIRCLE
+  | ACTION_CANVAS_RESET
+  | ACTION_CANVAS_ZOOM_IN
+  | ACTION_CANVAS_ZOOM_OUT
 
 export const useCanvasStore = defineStore("canvas", () => {
   const cssVars = ref<Map<string, CSSUnparsedSegment> | null>(null)
@@ -48,6 +63,10 @@ export const useCanvasStore = defineStore("canvas", () => {
 
   const actionAddRectangle = (): ACTION_CANVAS_ADD_RECTANGLE => ({
     type: "CANVAS/ADD_RECTANGLE",
+  })
+
+  const actionAddCircle = (): ACTION_CANVAS_ADD_CIRCLE => ({
+    type: "CANVAS/ADD_CIRCLE",
   })
 
   const actionReset = (): ACTION_CANVAS_RESET => ({
@@ -72,6 +91,7 @@ export const useCanvasStore = defineStore("canvas", () => {
     mousePos,
     zoomLevel,
     actionAddRectangle,
+    actionAddCircle,
     actionReset,
     actionZoomIn,
     actionZoomOut,

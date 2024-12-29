@@ -2,7 +2,7 @@
 import { ViewfinderCircleIcon, PlusIcon, MinusIcon } from "@heroicons/vue/24/outline"
 
 // Assets
-import { SquareIcon } from "@components/icons"
+import { SquareIcon, CircleIcon } from "@components/icons"
 
 // Stores
 import { useCanvasStore } from "@stores/canvas.stores"
@@ -15,6 +15,9 @@ const canvasStore = useCanvasStore()
     <div :class="$style.btnGroup">
       <button :class="$style.btn" title="Rectangle" @click="canvasStore.actionAddRectangle">
         <SquareIcon :class="$style.btnIcon" />
+      </button>
+      <button :class="$style.btn" title="Circle" @click="canvasStore.actionAddCircle">
+        <CircleIcon :class="$style.btnIcon" />
       </button>
     </div>
 

@@ -1,8 +1,11 @@
+export type NodeType = "rectangle" | "circle"
+
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 
 export interface Props {
   ctx: CanvasRenderingContext2D
+  type: NodeType
   x: number
   y: number
 }
@@ -20,6 +23,7 @@ const defaults = {
 class CanvasNodeImpl implements CanvasNode {
   private canvasStore: CanvasStore
   private ctx: CanvasRenderingContext2D
+  private type: NodeType
   private x: number
   private y: number
   private width: number
@@ -28,9 +32,10 @@ class CanvasNodeImpl implements CanvasNode {
   private borderColor: string | null
   private borderRadius: number | null
 
-  constructor({ ctx, x, y }: Props) {
+  constructor({ ctx, type, x, y }: Props) {
     this.canvasStore = useCanvasStore()
     this.ctx = ctx
+    this.type = type
     this.x = x
     this.y = y
     this.width = defaults.width
