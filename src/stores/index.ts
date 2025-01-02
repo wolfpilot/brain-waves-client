@@ -1,4 +1,5 @@
 import { useCanvasStore } from "./canvas.stores"
+import { useEngineStore } from "./engine.stores"
 import { useWebSocketStore } from "./websocket.stores"
 
-export { useCanvasStore, useWebSocketStore }
+export { useCanvasStore, useEngineStore, useWebSocketStore }

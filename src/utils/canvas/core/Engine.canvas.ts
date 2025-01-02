@@ -1,19 +1,19 @@
 // Stores
-import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
+import { type EngineStore, useEngineStore } from "@stores/engine.stores"
 
 export interface Engine {
   init: () => void
 }
 
 class EngineImpl implements Engine {
-  private canvasStore: CanvasStore
+  private engineStore: EngineStore
 
   constructor() {
-    this.canvasStore = useCanvasStore()
+    this.engineStore = useEngineStore()
   }
 
   private render() {
-    this.canvasStore.nodes.forEach((node) => node.draw())
+    this.engineStore.nodes.forEach((node) => node.draw())
 
     window.requestAnimationFrame(() => this.render())
   }
