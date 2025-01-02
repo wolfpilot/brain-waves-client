@@ -27,27 +27,27 @@ export const useCanvas = () => {
 
     const modifier = 1 + level * canvasConfig.zoom.stepSize
 
-    const newTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
-    const newMaxWidth = Math.round(modifier * canvasConfig.dimensions.maxWidth)
-    const newMaxHeight = Math.round(modifier * canvasConfig.dimensions.maxHeight)
+    const newGridTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
+    const newGridWidth = Math.round(modifier * canvasConfig.grid.maxWidth)
+    const newGridHeight = Math.round(modifier * canvasConfig.grid.maxHeight)
 
     // Bundle Map updates
     const newCssVars = new Map([...store.cssVars])
 
-    newCssVars.set("--canvas-bg-tile-size-px", `${newTileSize}px`)
-    newCssVars.set("--canvas-max-width", `${newMaxWidth}px`)
-    newCssVars.set("--canvas-max-height", `${newMaxHeight}px`)
+    newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
+    newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
+    newCssVars.set("--canvas-grid-height", `${newGridHeight}px`)
 
     // Update CSS vars
-    setCssVar("--canvas-bg-tile-size-px", `${newTileSize}px`)
-    setCssVar("--canvas-max-width", `${newMaxWidth}px`)
-    setCssVar("--canvas-max-height", `${newMaxHeight}px`)
+    setCssVar("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
+    setCssVar("--canvas-grid-width", `${newGridWidth}px`)
+    setCssVar("--canvas-grid-height", `${newGridHeight}px`)
 
     // Update store
     store.setCssVars(newCssVars)
     store.setGridSize({
-      width: newMaxWidth,
-      height: newMaxHeight,
+      width: newGridWidth,
+      height: newGridHeight,
     })
     store.setZoomLevel(level)
   }

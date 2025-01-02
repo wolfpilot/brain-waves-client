@@ -1,9 +1,7 @@
 export const config = {
-  dimensions: {
+  grid: {
     maxWidth: 4000,
     maxHeight: 2000,
-  },
-  grid: {
     tileSize: 60,
   },
   zoom: {

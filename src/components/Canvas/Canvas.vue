@@ -231,10 +231,10 @@ watch(mousePos, onMousePosChange)
   z-index: -1;
   top: 0;
   left: 0;
-  width: var(--canvas-max-width);
-  height: var(--canvas-max-height);
+  width: var(--canvas-grid-width);
+  height: var(--canvas-grid-height);
   background: var(--p-cross);
-  background-size: var(--canvas-bg-tile-size-px) var(--canvas-bg-tile-size-px);
+  background-size: var(--canvas-grid-tile-size-px) var(--canvas-grid-tile-size-px);
   border: 5px solid var(--c-accent-2);
   transform-origin: top left;
 }
