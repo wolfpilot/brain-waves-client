@@ -1,37 +1,40 @@
 <script setup lang="ts">
 import { ViewfinderCircleIcon, PlusIcon, MinusIcon } from "@heroicons/vue/24/outline"
 
-// Assets
-import { SquareIcon, CircleIcon } from "@components/icons"
+// Utils
+import { useCanvas } from "@utils/services/useCanvas.services"
 
-// Stores
-import { useCanvasStore } from "@stores/canvas.stores"
+export type Controls = "Reset Canvas" | "Zoom in" | "Zoom out"
 
-const canvasStore = useCanvasStore()
+const canvasService = useCanvas()
+
+// Handlers
+const handleOnReset = () => {
+  canvasService.reset()
+}
+
+const handleOnZoomIn = () => {
+  canvasService.zoomIn()
+}
+
+const handleOnZoomOut = () => {
+  canvasService.zoomOut()
+}
 </script>
 
 <template>
   <aside :class="$style.wrapper">
     <div :class="$style.btnGroup">
-      <button :class="$style.btn" title="Rectangle" @click="canvasStore.actionAddRectangle">
-        <SquareIcon :class="$style.btnIcon" />
-      </button>
-      <button :class="$style.btn" title="Circle" @click="canvasStore.actionAddCircle">
-        <CircleIcon :class="$style.btnIcon" />
-      </button>
-    </div>
-
-    <div :class="$style.btnGroup">
-      <button :class="$style.btn" title="Reset canvas" @click="canvasStore.actionReset">
-        <ViewfinderCircleIcon :class="$style.btnIcon" />
+      <button :class="$style.btn" title="Reset canvas" @click="handleOnReset">
+        <ViewfinderCircleIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" title="Zoom in" @click="canvasStore.actionZoomIn">
-        <PlusIcon :class="$style.btnIcon" />
+      <button :class="$style.btn" title="Zoom in" @click="handleOnZoomIn">
+        <PlusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" title="Zoom out" @click="canvasStore.actionZoomOut">
-        <MinusIcon :class="$style.btnIcon" />
+      <button :class="$style.btn" title="Zoom out" @click="handleOnZoomOut">
+        <MinusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
     </div>
   </aside>
@@ -50,6 +53,7 @@ const canvasStore = useCanvasStore()
 .btnGroup {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--c-accent-4-50);
   border-radius: var(--border-radius-default);
 
@@ -59,24 +63,33 @@ const canvasStore = useCanvasStore()
 }
 
 .btn {
-  background: none;
-  outline: none;
-  border: none;
-
   width: var(--btnSize);
   height: var(--btnSize);
   padding: 0;
-  background: var(--c-accent-4-10);
+  background-color: var(--c-accent-4-10);
+  outline: none;
+  border: none;
 
   &:hover,
   &:focus-within {
-    background-color: var(--c-accent-4-20);
+    background-color: var(--c-accent-4-30);
+  }
+
+  &.isActive {
+    background-color: var(--c-accent-4);
   }
 }
 
 .btnIcon {
   width: var(--btnIconSize);
   height: var(--btnIconSize);
+}
+
+.btnIconStroke {
   stroke: var(--c-white-80);
+}
+
+.btnIconFill {
+  fill: var(--c-white-80);
 }
 </style>

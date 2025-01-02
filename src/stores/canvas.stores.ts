@@ -1,101 +1,76 @@
-import { ref } from "vue"
+import { ref, reactive, computed, readonly, toRefs } from "vue"
 import { defineStore } from "pinia"
 
 // Types
-import { type Coords } from "@ts/math.types"
+import { type Coords, type Dimensions } from "@ts/math.types"
 
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
-// Utils
-import { CanvasNode } from "@utils/canvas/nodes"
-
-export type CANVAS_ADD_RECTANGLE = "CANVAS/ADD_RECTANGLE"
-export type CANVAS_ADD_CIRCLE = "CANVAS/ADD_CIRCLE"
-export type CANVAS_RESET = "CANVAS/RESET"
-export type CANVAS_ZOOM_IN = "CANVAS/ZOOM_IN"
-export type CANVAS_ZOOM_OUT = "CANVAS/ZOOM_OUT"
-
-export type ACTIONS_CANVAS =
-  | CANVAS_ADD_RECTANGLE
-  | CANVAS_ADD_CIRCLE
-  | CANVAS_RESET
-  | CANVAS_ZOOM_IN
-  | CANVAS_ZOOM_OUT
-
-export interface ACTION_CANVAS_ADD_RECTANGLE {
-  type: CANVAS_ADD_RECTANGLE
-}
-
-export interface ACTION_CANVAS_ADD_CIRCLE {
-  type: CANVAS_ADD_CIRCLE
-}
-
-export interface ACTION_CANVAS_RESET {
-  type: CANVAS_RESET
-}
-
-export interface ACTION_CANVAS_ZOOM_IN {
-  type: CANVAS_ZOOM_IN
-}
-
-export interface ACTION_CANVAS_ZOOM_OUT {
-  type: CANVAS_ZOOM_OUT
-}
-
-export type ACTION_CANVAS =
-  | ACTION_CANVAS_ADD_RECTANGLE
-  | ACTION_CANVAS_ADD_CIRCLE
-  | ACTION_CANVAS_RESET
-  | ACTION_CANVAS_ZOOM_IN
-  | ACTION_CANVAS_ZOOM_OUT
-
+/**
+ * Create a store with state as read-only values, updatable via actions
+ *
+ * @see https://github.com/vuejs/pinia/issues/58
+ */
 export const useCanvasStore = defineStore("canvas", () => {
-  const cssVars = ref<Map<string, CSSUnparsedSegment> | null>(null)
-  const x = ref<number | null>(null)
-  const y = ref<number | null>(null)
-  const width = ref<number | null>(null)
-  const height = ref<number | null>(null)
-  const viewportPos = ref<Coords | null>(null)
-  const mousePos = ref<Coords | null>(null)
-  const zoomLevel = ref<number>(canvasConfig.zoom.default)
-  const nodes = ref<CanvasNode[]>([])
+  // Context cannot be read-only, but this is a good way to share it across consumers
+  const ctx = ref<CanvasRenderingContext2D | null>(null)
 
-  const actionAddRectangle = (): ACTION_CANVAS_ADD_RECTANGLE => ({
-    type: "CANVAS/ADD_RECTANGLE",
+  const state = reactive({
+    cssVars: <Map<string, CSSUnparsedSegment> | null>null,
+    canvasSize: <Dimensions | null>null,
+    gridSize: <Dimensions | null>null,
+    viewportPos: <Coords | null>null,
+    mousePos: <Coords | null>null,
+    zoomLevel: <number>canvasConfig.zoom.default,
   })
 
-  const actionAddCircle = (): ACTION_CANVAS_ADD_CIRCLE => ({
-    type: "CANVAS/ADD_CIRCLE",
-  })
+  const getters = {
+    siteHeaderHeight: computed(() => {
+      if (!state.cssVars) return null
 
-  const actionReset = (): ACTION_CANVAS_RESET => ({
-    type: "CANVAS/RESET",
-  })
+      const cssSiteHeaderHeight = state.cssVars.get("--size-siteHeaderHeight") as string
 
-  const actionZoomIn = (): ACTION_CANVAS_ZOOM_IN => ({
-    type: "CANVAS/ZOOM_IN",
-  })
+      return parseInt(cssSiteHeaderHeight, 10)
+    }),
+    siteFooterHeight: computed(() => {
+      if (!state.cssVars) return null
 
-  const actionZoomOut = (): ACTION_CANVAS_ZOOM_OUT => ({
-    type: "CANVAS/ZOOM_OUT",
-  })
+      const cssSiteFooterHeight = state.cssVars.get("--size-siteFooterHeight") as string
+
+      return parseInt(cssSiteFooterHeight, 10)
+    }),
+  }
+
+  const actions = {
+    setContext(val: CanvasRenderingContext2D) {
+      ctx.value = val
+    },
+    setCssVars(val: Map<string, CSSUnparsedSegment>) {
+      state.cssVars = val
+    },
+    setCanvasSize(val: Dimensions) {
+      state.canvasSize = val
+    },
+    setGridSize(val: Dimensions) {
+      state.gridSize = val
+    },
+    setViewportPos(val: Coords) {
+      state.viewportPos = val
+    },
+    setMousePos(val: Coords) {
+      state.mousePos = val
+    },
+    setZoomLevel(val: number) {
+      state.zoomLevel = val
+    },
+  }
 
   return {
-    cssVars,
-    x,
-    y,
-    width,
-    height,
-    viewportPos,
-    mousePos,
-    zoomLevel,
-    actionAddRectangle,
-    actionAddCircle,
-    actionReset,
-    actionZoomIn,
-    actionZoomOut,
-    nodes,
+    ctx,
+    ...toRefs(readonly(state)),
+    ...getters,
+    ...actions,
   }
 })
 

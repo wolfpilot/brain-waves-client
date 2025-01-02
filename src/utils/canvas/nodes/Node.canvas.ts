@@ -1,10 +1,11 @@
-export type NodeType = "rectangle" | "circle"
-
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+
+export type NodeType = "rectangle" | "circle"
+export type NodeMode = "preview" | "final"
 
 export interface Props {
   ctx: CanvasRenderingContext2D
@@ -14,6 +15,7 @@ export interface Props {
 }
 
 export interface CanvasNode {
+  init: () => void
   draw: () => void
 }
 
@@ -31,6 +33,7 @@ const defaults = {
 class CanvasNodeImpl implements CanvasNode {
   private canvasStore: CanvasStore
   private ctx: CanvasRenderingContext2D
+  private mode: NodeMode
   private type: NodeType
   private x: number
   private y: number
@@ -41,6 +44,7 @@ class CanvasNodeImpl implements CanvasNode {
   constructor({ ctx, type, x, y }: Props) {
     this.canvasStore = useCanvasStore()
     this.ctx = ctx
+    this.mode = "preview"
     this.type = type
     this.x = x
     this.y = y
@@ -59,8 +63,6 @@ class CanvasNodeImpl implements CanvasNode {
     this.fillColor = cssFillColor as string
     this.borderColor = cssBorderColor as string
     this.borderRadius = parseInt(cssBorderRadius as string, 10)
-
-    this.init()
   }
 
   public draw() {
@@ -104,7 +106,7 @@ class CanvasNodeImpl implements CanvasNode {
     this.ctx.stroke()
   }
 
-  private init() {
+  public init() {
     this.draw()
   }
 }

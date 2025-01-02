@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { type Ref, ref, reactive, onMounted, watch } from "vue"
+import { ref, reactive, onMounted, watch } from "vue"
 import { storeToRefs } from "pinia"
 import { useEventListener, useDebounceFn, useThrottleFn } from "@vueuse/core"
 
 // Types
 import { type Coords } from "@ts/math.types"
-
-// Configs
-import { config as canvasConfig } from "@configs/canvas.config"
 
 // Stores
 import { useCanvasStore } from "@stores/index"
@@ -21,118 +18,65 @@ import {
 import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
-import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
-import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+import { useCanvas } from "@utils/services/useCanvas.services"
+import { getCssVars } from "@utils/helpers/dom.helpers"
 import Engine from "@utils/canvas/core/Engine.canvas"
-import { CanvasNode } from "@utils/canvas/nodes"
 
 // Components
 import { Toolbar } from "@components/gui"
+import type { CanvasStore } from "@stores/canvas.stores"
 
 // Setup
 const DEBOUNCE_RESIZE_MS = 500
 const THROTTLE_MOUSE_MOVE_MS = 1000 / 60 // aka 60Hz
 
 const canvasStore = useCanvasStore()
+const canvasService = useCanvas()
 
-const { mousePos } = storeToRefs(canvasStore)
+const { viewportPos, mousePos } = storeToRefs(canvasStore)
 
-const wrapperRef: Ref<HTMLDivElement | null> = ref(null)
-const gridRef: Ref<HTMLDivElement | null> = ref(null)
-const canvasRef: Ref<HTMLCanvasElement | null> = ref(null)
-const ctx: Ref<CanvasRenderingContext2D | null> = ref(null)
-
-const wrapperBounds: Ref<DOMRect | null> = ref(null)
-const gridBounds: Ref<DOMRect | null> = ref(null)
+const gridRef = ref<HTMLDivElement | null>(null)
+const canvasRef = ref<HTMLCanvasElement | null>(null)
 
 const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
 // Helpers
-const addRectangle = () => {
-  if (!ctx.value) return
-
-  const node = new CanvasNode({
-    ctx: ctx.value,
-    type: "rectangle",
-    x: 200,
-    y: 200,
-  })
-
-  canvasStore.nodes.push(node)
+const updateCssVars = () => {
+  canvasStore.setCssVars(getCssVars())
 }
 
-const addCircle = () => {
-  if (!ctx.value) return
+const updateCanvasSize = () => {
+  if (!canvasStore.siteHeaderHeight || !canvasStore.siteFooterHeight) return
 
-  const node = new CanvasNode({
-    ctx: ctx.value,
-    type: "circle",
-    x: 200,
-    y: 200,
-  })
-
-  canvasStore.nodes.push(node)
-}
-
-const updateBounds = () => {
-  if (!wrapperRef.value || !gridRef.value) return
-
-  const cssVars = getCssVars()
-
-  const cssSiteHeaderHeight = cssVars.get("--size-siteHeaderHeight")
-  const cssSiteFooterHeight = cssVars.get("--size-siteFooterHeight")
-
-  if (!cssSiteHeaderHeight || !cssSiteFooterHeight) return
-
-  const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
-  const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
-
-  // Update local state
-  wrapperBounds.value = wrapperRef.value.getBoundingClientRect()
-  gridBounds.value = gridRef.value.getBoundingClientRect()
-
-  // Update store
-  canvasStore.$patch({
-    cssVars,
-    x: wrapperBounds.value.x,
-    y: wrapperBounds.value.y,
+  canvasStore.setCanvasSize({
     width: window.innerWidth,
-    height: window.innerHeight - siteHeaderHeight - siteFooterHeight,
+    height: window.innerHeight - canvasStore.siteHeaderHeight - canvasStore.siteFooterHeight,
   })
 }
 
-const move = ({ x, y }: Coords) => {
+const updateGridSize = () => {
   if (!gridRef.value) return
 
-  // Apply transforms
-  gridRef.value.style.transform = `translate(${x}px, ${y}px)`
+  const gridBounds = gridRef.value.getBoundingClientRect()
 
-  // Update store
-  canvasStore.viewportPos = {
-    x,
-    y,
-  }
+  canvasStore.setGridSize({
+    width: gridBounds.width,
+    height: gridBounds.height,
+  })
 }
 
-const pan = (mousePos: Coords | null, prevMousePos: Coords | null) => {
+const panViewport = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   if (
     !mousePos ||
     !prevMousePos ||
-    !wrapperBounds.value ||
-    !gridBounds.value ||
-    !canvasStore.cssVars ||
-    !canvasStore.viewportPos
+    !canvasStore.canvasSize ||
+    !canvasStore.gridSize ||
+    !canvasStore.viewportPos ||
+    !canvasStore.siteHeaderHeight ||
+    !canvasStore.siteFooterHeight
   ) {
     return
   }
-
-  const cssSiteHeaderHeight = canvasStore.cssVars.get("--size-siteHeaderHeight")
-  const cssSiteFooterHeight = canvasStore.cssVars.get("--size-siteFooterHeight")
-
-  if (!cssSiteHeaderHeight || !cssSiteFooterHeight) return
-
-  const siteHeaderHeight = parseInt(cssSiteHeaderHeight as string, 10)
-  const siteFooterHeight = parseInt(cssSiteFooterHeight as string, 10)
 
   const dX = mousePos.x - prevMousePos.x
   const dY = mousePos.y - prevMousePos.y
@@ -142,111 +86,49 @@ const pan = (mousePos: Coords | null, prevMousePos: Coords | null) => {
 
   const finalX =
     // Check if the viewport is smaller than the window
-    gridBounds.value.width < window.innerWidth
-      ? wrapperBounds.value.width / 2 - gridBounds.value.width / 2
+    canvasStore.gridSize.width < window.innerWidth
+      ? canvasStore.canvasSize.width / 2 - canvasStore.gridSize.width / 2
       : // or if outside left bounds
         newX > 0
         ? 0
         : // or outside right bounds
-          newX < window.innerWidth - gridBounds.value.width
-          ? window.innerWidth - gridBounds.value.width
+          newX < window.innerWidth - canvasStore.gridSize.width
+          ? window.innerWidth - canvasStore.gridSize.width
           : // else assign the newly calculated coords
             newX
 
   const finalY =
     // Check if the viewport is smaller than the window
-    gridBounds.value.height < window.innerHeight
-      ? wrapperBounds.value.height / 2 - gridBounds.value.height / 2
+    canvasStore.gridSize.height < window.innerHeight
+      ? canvasStore.canvasSize.height / 2 - canvasStore.gridSize.height / 2
       : // or if outside top bounds
         newY > 0
         ? 0
         : // or outside bottom bounds
-          newY < window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
-          ? window.innerHeight - siteHeaderHeight - siteFooterHeight - gridBounds.value.height
+          newY <
+            window.innerHeight -
+              canvasStore.siteHeaderHeight -
+              canvasStore.siteFooterHeight -
+              canvasStore.gridSize.height
+          ? window.innerHeight -
+            canvasStore.siteHeaderHeight -
+            canvasStore.siteFooterHeight -
+            canvasStore.gridSize.height
           : // else assign the newly calculated coords
             newY
 
-  // Apply transforms
-  move({
+  // Update store
+  canvasStore.setViewportPos({
     x: finalX,
     y: finalY,
   })
 }
 
-const centre = () => {
-  if (!wrapperBounds.value || !gridBounds.value) return
-
-  const newX = wrapperBounds.value.width / 2 - gridBounds.value.width / 2
-  const newY = wrapperBounds.value.height / 2 - gridBounds.value.height / 2
-
-  // Apply transforms
-  move({
-    x: newX,
-    y: newY,
-  })
-}
-
-const zoom = (level: number) => {
-  if (!gridRef.value || !canvasStore.cssVars) return
-
-  const modifier = 1 + level * canvasConfig.zoom.stepSize
-
-  const newTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
-  const newMaxWidth = Math.round(modifier * canvasConfig.dimensions.maxWidth)
-  const newMaxHeight = Math.round(modifier * canvasConfig.dimensions.maxHeight)
-
-  // Bundle Map updates
-  const newCssVars = new Map([...canvasStore.cssVars])
-
-  newCssVars.set("--canvas-bg-tile-size-px", `${newTileSize}px`)
-  newCssVars.set("--canvas-max-width", `${newMaxWidth}px`)
-  newCssVars.set("--canvas-max-height", `${newMaxHeight}px`)
-
-  // Update CSS vars
-  setCssVar("--canvas-bg-tile-size-px", `${newTileSize}px`)
-  setCssVar("--canvas-max-width", `${newMaxWidth}px`)
-  setCssVar("--canvas-max-height", `${newMaxHeight}px`)
-
-  // Update local state
-  gridBounds.value = gridRef.value.getBoundingClientRect()
-
-  // Update store
-  canvasStore.$patch({
-    cssVars: newCssVars,
-    zoomLevel: level,
-  })
-}
-
-const zoomIn = () => {
-  const newLevel = canvasStore.zoomLevel + 1
-
-  if (newLevel > canvasConfig.zoom.max) return
-
-  zoom(newLevel)
-}
-
-const zoomOut = () => {
-  const newLevel = canvasStore.zoomLevel - 1
-
-  if (newLevel < canvasConfig.zoom.min) return
-
-  zoom(newLevel)
-}
-
-const reset = () => {
-  /**
-   * NOTE: Need to maintain call order.
-   *
-   * Logically, it makes sense to first reset the zoom levels,
-   * only then centre the canvas.
-   */
-  zoom(canvasConfig.zoom.default)
-  centre()
-}
-
 // Handlers
 const handleResize = useDebounceFn(() => {
-  updateBounds()
+  updateCssVars()
+  updateCanvasSize()
+  updateGridSize()
 }, DEBOUNCE_RESIZE_MS)
 
 const handleMouseDown = (e: MouseEvent) => {
@@ -262,18 +144,14 @@ const handleMouseUp = (e: MouseEvent) => {
 }
 
 const handleMouseMove = useThrottleFn((e: MouseEvent) => {
-  canvasStore.mousePos = {
+  canvasStore.setMousePos({
     x: e.clientX,
     y: e.clientY,
-  }
+  })
 }, THROTTLE_MOUSE_MOVE_MS)
 
 const handleWheel = (e: WheelEvent) => {
-  if (e.deltaY < 0) {
-    zoomIn()
-  } else {
-    zoomOut()
-  }
+  return e.deltaY < 0 ? canvasService.zoomIn() : canvasService.zoomOut()
 }
 
 const bindListeners = () => {
@@ -288,13 +166,18 @@ const bindListeners = () => {
 
 // Lifecycle
 onMounted(() => {
-  ctx.value = canvasRef.value?.getContext("2d") || null
+  const ctx = canvasRef.value?.getContext("2d") || null
 
-  if (!ctx.value) return
+  if (!ctx) return
 
-  updateBounds()
-  centre()
+  canvasStore.setContext(ctx)
+
+  updateCssVars()
+  updateCanvasSize()
+  updateGridSize()
   bindListeners()
+
+  canvasService.reset()
 
   // Initialize entities
   const engine = new Engine()
@@ -302,48 +185,38 @@ onMounted(() => {
   engine.init()
 })
 
-watch(mousePos, (state, prevState) => {
+const onViewportPosChange = (state: CanvasStore["viewportPos"]) => {
+  if (!state || !gridRef.value) return
+
+  gridRef.value.style.transform = `translate(${state.x}px, ${state.y}px)`
+}
+
+const onMousePosChange = (
+  state: CanvasStore["viewportPos"],
+  prevState: CanvasStore["viewportPos"],
+) => {
   switch (true) {
     case activeMouseButtons.get("middle"):
-      pan(state, prevState)
+      panViewport(state, prevState)
       return
     default:
       return
   }
-})
+}
 
-canvasStore.$onAction(({ name }) => {
-  switch (name) {
-    case "actionAddRectangle":
-      addRectangle()
-      break
-    case "actionAddCircle":
-      addCircle()
-      break
-    case "actionReset":
-      reset()
-      break
-    case "actionZoomIn":
-      zoomIn()
-      break
-    case "actionZoomOut":
-      zoomOut()
-      break
-    default:
-      assertExhaustiveGuard(name)
-      break
-  }
-})
+watch(viewportPos, onViewportPosChange)
+watch(mousePos, onMousePosChange)
 </script>
 
 <template>
-  <div
-    ref="wrapperRef"
-    :class="[$style.wrapper, activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]"
-  >
+  <div :class="[$style.wrapper, activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]">
     <Toolbar />
     <div ref="gridRef" :class="$style.grid" />
-    <canvas ref="canvasRef" :width="canvasStore.width || 0" :height="canvasStore.height || 0" />
+    <canvas
+      ref="canvasRef"
+      :width="canvasStore.canvasSize?.width || 0"
+      :height="canvasStore.canvasSize?.height || 0"
+    />
   </div>
 </template>
 
@@ -358,10 +231,10 @@ canvasStore.$onAction(({ name }) => {
   z-index: -1;
   top: 0;
   left: 0;
-  width: var(--canvas-max-width);
-  height: var(--canvas-max-height);
+  width: var(--canvas-grid-width);
+  height: var(--canvas-grid-height);
   background: var(--p-cross);
-  background-size: var(--canvas-bg-tile-size-px) var(--canvas-bg-tile-size-px);
+  background-size: var(--canvas-grid-tile-size-px) var(--canvas-grid-tile-size-px);
   border: 5px solid var(--c-accent-2);
   transform-origin: top left;
 }
