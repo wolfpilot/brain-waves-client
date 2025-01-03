@@ -6,17 +6,17 @@ import { CursorIcon, SquareIcon, CircleIcon } from "@components/icons"
 
 // Stores
 import { useCanvasStore } from "@stores/canvas.stores"
-import { useEngineStore } from "@stores/engine.stores"
 
 // Constants
 import { TOOLBAR_TOOLS, TOOLBAR_CONTROLS } from "@constants/toolbar.constants"
 
 // Utils
 import { useCanvas } from "@utils/services/useCanvas.services"
+import { useEngine } from "@utils/services/useEngine.services"
 
 const canvasStore = useCanvasStore()
-const engineStore = useEngineStore()
 const canvasService = useCanvas()
+const engineService = useEngine()
 
 // Handlers
 const handleOnSelect = () => {
@@ -25,12 +25,12 @@ const handleOnSelect = () => {
 
 const handleOnAddRectangle = () => {
   canvasStore.setActiveTool(TOOLBAR_TOOLS.rectangle)
-  engineStore.addRectangle()
+  engineService.addRectangle()
 }
 
 const handleOnAddCircle = () => {
   canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
-  engineStore.addCircle()
+  engineService.addCircle()
 }
 
 const handleOnReset = () => {
