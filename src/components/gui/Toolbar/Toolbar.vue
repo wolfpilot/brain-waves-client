@@ -1,14 +1,38 @@
 <script setup lang="ts">
 import { ViewfinderCircleIcon, PlusIcon, MinusIcon } from "@heroicons/vue/24/outline"
 
+// Assets
+import { CursorIcon, SquareIcon, CircleIcon } from "@components/icons"
+
+// Stores
+import { useCanvasStore } from "@stores/canvas.stores"
+import { useEngineStore } from "@stores/engine.stores"
+
+// Constants
+import { TOOLBAR_TOOLS, TOOLBAR_CONTROLS } from "@constants/toolbar.constants"
+
 // Utils
 import { useCanvas } from "@utils/services/useCanvas.services"
 
-export type Controls = "Reset Canvas" | "Zoom in" | "Zoom out"
-
+const canvasStore = useCanvasStore()
+const engineStore = useEngineStore()
 const canvasService = useCanvas()
 
 // Handlers
+const handleOnSelect = () => {
+  canvasStore.setActiveTool(TOOLBAR_TOOLS.select)
+}
+
+const handleOnAddRectangle = () => {
+  canvasStore.setActiveTool(TOOLBAR_TOOLS.rectangle)
+  engineStore.addRectangle()
+}
+
+const handleOnAddCircle = () => {
+  canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
+  engineStore.addCircle()
+}
+
 const handleOnReset = () => {
   canvasService.reset()
 }
@@ -25,15 +49,40 @@ const handleOnZoomOut = () => {
 <template>
   <aside :class="$style.wrapper">
     <div :class="$style.btnGroup">
-      <button :class="$style.btn" title="Reset canvas" @click="handleOnReset">
+      <button
+        :class="[$style.btn, canvasStore.activeTool === TOOLBAR_TOOLS.select && $style.isActive]"
+        :title="TOOLBAR_TOOLS.select"
+        @click="handleOnSelect"
+      >
+        <CursorIcon :class="[$style.btnIcon, $style.btnIconFill]" />
+      </button>
+
+      <button
+        :class="[$style.btn, canvasStore.activeTool === TOOLBAR_TOOLS.rectangle && $style.isActive]"
+        :title="TOOLBAR_TOOLS.rectangle"
+        @click="handleOnAddRectangle"
+      >
+        <SquareIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
+      </button>
+      <button
+        :class="[$style.btn, canvasStore.activeTool === TOOLBAR_TOOLS.circle && $style.isActive]"
+        :title="TOOLBAR_TOOLS.circle"
+        @click="handleOnAddCircle"
+      >
+        <CircleIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
+      </button>
+    </div>
+
+    <div :class="$style.btnGroup">
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.reset" @click="handleOnReset">
         <ViewfinderCircleIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" title="Zoom in" @click="handleOnZoomIn">
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomIn" @click="handleOnZoomIn">
         <PlusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" title="Zoom out" @click="handleOnZoomOut">
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomOut" @click="handleOnZoomOut">
         <MinusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
     </div>

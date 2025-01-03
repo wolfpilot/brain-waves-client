@@ -7,6 +7,9 @@ import { type Coords, type Dimensions } from "@ts/math.types"
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
+// Constants
+import { type ToolValueTypes, TOOLBAR_TOOLS } from "@constants/toolbar.constants"
+
 /**
  * Create a store with state as read-only values, updatable via actions
  *
@@ -23,6 +26,7 @@ export const useCanvasStore = defineStore("canvas", () => {
     viewportPos: <Coords | null>null,
     mousePos: <Coords | null>null,
     zoomLevel: <number>canvasConfig.zoom.default,
+    activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
   })
 
   const getters = {
@@ -60,6 +64,9 @@ export const useCanvasStore = defineStore("canvas", () => {
     },
     setMousePos(val: Coords) {
       state.mousePos = val
+    },
+    setActiveTool(val: ToolValueTypes) {
+      state.activeTool = val
     },
     setZoomLevel(val: number) {
       state.zoomLevel = val
