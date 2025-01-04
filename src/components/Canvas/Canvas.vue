@@ -1,44 +1,35 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from "vue"
+import { ref, onMounted, watch } from "vue"
 import { storeToRefs } from "pinia"
-import { useEventListener, useDebounceFn, useThrottleFn } from "@vueuse/core"
 
 // Types
 import { type Coords } from "@ts/math.types"
 
 // Stores
-import { useCanvasStore } from "@stores/index"
+import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
+import { type IoStore, useIoStore } from "@stores/io.stores"
 
 // Constants
-import {
-  MouseKeyToValue,
-  type MouseBtnKeys,
-  type MouseBtnValuesTypes,
-} from "@constants/keys.constants"
 import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { useCanvas } from "@utils/services/useCanvas.services"
 import { getCssVars } from "@utils/helpers/dom.helpers"
 import Engine from "@utils/canvas/core/Engine.canvas"
+import IoManager from "@utils/managers/io.managers"
 
 // Components
 import { Toolbar } from "@components/gui"
-import type { CanvasStore } from "@stores/canvas.stores"
-
-// Setup
-const DEBOUNCE_RESIZE_MS = 500
-const THROTTLE_MOUSE_MOVE_MS = 1000 / 60 // aka 60Hz
 
 const canvasStore = useCanvasStore()
+const ioStore = useIoStore()
 const canvasService = useCanvas()
 
-const { viewportPos, mousePos } = storeToRefs(canvasStore)
+const { viewportPos } = storeToRefs(canvasStore)
+const { windowSize, mousePos, wheelOffsetY } = storeToRefs(ioStore)
 
 const gridRef = ref<HTMLDivElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
-
-const activeMouseButtons = reactive<Map<MouseBtnValuesTypes, boolean>>(new Map())
 
 // Helpers
 const updateCssVars = () => {
@@ -124,46 +115,6 @@ const panViewport = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   })
 }
 
-// Handlers
-const handleResize = useDebounceFn(() => {
-  updateCssVars()
-  updateCanvasSize()
-  updateGridSize()
-}, DEBOUNCE_RESIZE_MS)
-
-const handleMouseDown = (e: MouseEvent) => {
-  const activeBtn = MouseKeyToValue[e.button as MouseBtnKeys]
-
-  activeMouseButtons.set(activeBtn, true)
-}
-
-const handleMouseUp = (e: MouseEvent) => {
-  const activeBtn = MouseKeyToValue[e.button as MouseBtnKeys]
-
-  activeMouseButtons.set(activeBtn, false)
-}
-
-const handleMouseMove = useThrottleFn((e: MouseEvent) => {
-  canvasStore.setMousePos({
-    x: e.clientX,
-    y: e.clientY,
-  })
-}, THROTTLE_MOUSE_MOVE_MS)
-
-const handleWheel = (e: WheelEvent) => {
-  return e.deltaY < 0 ? canvasService.zoomIn() : canvasService.zoomOut()
-}
-
-const bindListeners = () => {
-  if (!canvasRef.value) return
-
-  useEventListener(window, "resize", handleResize)
-  useEventListener(canvasRef, "mousedown", handleMouseDown)
-  useEventListener(window, "mouseup", handleMouseUp)
-  useEventListener(window, "mousemove", handleMouseMove)
-  useEventListener(canvasRef, "wheel", handleWheel)
-}
-
 // Lifecycle
 onMounted(() => {
   const ctx = canvasRef.value?.getContext("2d") || null
@@ -175,15 +126,23 @@ onMounted(() => {
   updateCssVars()
   updateCanvasSize()
   updateGridSize()
-  bindListeners()
 
   canvasService.reset()
 
   // Initialize entities
   const engine = new Engine()
+  const ioManager = new IoManager()
 
   engine.init()
+  ioManager.init()
 })
+
+// Handlers
+const onWindowSizeChange = () => {
+  updateCssVars()
+  updateCanvasSize()
+  updateGridSize()
+}
 
 const onViewportPosChange = (state: CanvasStore["viewportPos"]) => {
   if (!state || !gridRef.value) return
@@ -196,7 +155,7 @@ const onMousePosChange = (
   prevState: CanvasStore["viewportPos"],
 ) => {
   switch (true) {
-    case activeMouseButtons.get("middle"):
+    case ioStore.activeMouseButtons.get("middle"):
       panViewport(state, prevState)
       return
     default:
@@ -204,12 +163,21 @@ const onMousePosChange = (
   }
 }
 
-watch(viewportPos, onViewportPosChange)
+const onWheelOffsetYChange = (
+  state: IoStore["wheelOffsetY"],
+  prevState: IoStore["wheelOffsetY"],
+) => {
+  return state - prevState < 0 ? canvasService.zoomIn() : canvasService.zoomOut()
+}
+
+watch(windowSize, onWindowSizeChange)
 watch(mousePos, onMousePosChange)
+watch(wheelOffsetY, onWheelOffsetYChange)
+watch(viewportPos, onViewportPosChange)
 </script>
 
 <template>
-  <div :class="[$style.wrapper, activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]">
+  <div :class="[$style.wrapper, ioStore.activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]">
     <Toolbar />
     <div ref="gridRef" :class="$style.grid" />
     <canvas

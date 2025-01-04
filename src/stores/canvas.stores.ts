@@ -24,7 +24,6 @@ export const useCanvasStore = defineStore("canvas", () => {
     canvasSize: <Dimensions | null>null,
     gridSize: <Dimensions | null>null,
     viewportPos: <Coords | null>null,
-    mousePos: <Coords | null>null,
     zoomLevel: <number>canvasConfig.zoom.default,
     activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
   })
@@ -61,9 +60,6 @@ export const useCanvasStore = defineStore("canvas", () => {
     },
     setViewportPos(val: Coords) {
       state.viewportPos = val
-    },
-    setMousePos(val: Coords) {
-      state.mousePos = val
     },
     setActiveTool(val: ToolValueTypes) {
       state.activeTool = val
