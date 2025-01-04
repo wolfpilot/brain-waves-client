@@ -31,79 +31,75 @@ const defaults = {
 }
 
 class CanvasNodeImpl implements CanvasNode {
-  private canvasStore: CanvasStore
-  private ctx: CanvasRenderingContext2D
-  private mode: NodeMode
-  private type: NodeType
-  private x: number
-  private y: number
-  private fillColor: string | null
-  private borderColor: string | null
-  private borderRadius: number | null
+  #canvasStore: CanvasStore
+  #ctx: CanvasRenderingContext2D
+  #mode: NodeMode
+  #type: NodeType
+  #x: number
+  #y: number
+  #fillColor: string | null
+  #borderColor: string | null
+  #borderRadius: number | null
 
   constructor({ ctx, type, x, y }: Props) {
-    this.canvasStore = useCanvasStore()
-    this.ctx = ctx
-    this.mode = "preview"
-    this.type = type
-    this.x = x
-    this.y = y
-    this.fillColor = null
-    this.borderColor = null
-    this.borderRadius = null
+    this.#canvasStore = useCanvasStore()
+    this.#ctx = ctx
+    this.#mode = "preview"
+    this.#type = type
+    this.#x = x
+    this.#y = y
+    this.#fillColor = null
+    this.#borderColor = null
+    this.#borderRadius = null
 
-    if (!this.canvasStore.cssVars) return
+    if (!this.#canvasStore.cssVars) return
 
-    const cssFillColor = this.canvasStore.cssVars.get("--c-node-fill")
-    const cssBorderColor = this.canvasStore.cssVars.get("--c-accent-4")
-    const cssBorderRadius = this.canvasStore.cssVars.get("--border-radius-default")
+    const cssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
+    const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
+    const cssBorderRadius = this.#canvasStore.cssVars.get("--border-radius-default")
 
     if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
 
-    this.fillColor = cssFillColor as string
-    this.borderColor = cssBorderColor as string
-    this.borderRadius = parseInt(cssBorderRadius as string, 10)
+    this.#fillColor = cssFillColor as string
+    this.#borderColor = cssBorderColor as string
+    this.#borderRadius = parseInt(cssBorderRadius as string, 10)
   }
 
-  public draw() {
-    switch (this.type) {
+  #drawRectangle = () => {
+    if (!this.#fillColor || !this.#borderColor || !this.#borderRadius) return
+
+    this.#ctx.fillStyle = this.#fillColor
+    this.#ctx.strokeStyle = this.#borderColor
+    this.#ctx.beginPath()
+    this.#ctx.roundRect(this.#x, this.#y, defaults.rectangle.width, defaults.rectangle.height, [
+      this.#borderRadius,
+    ])
+    this.#ctx.fill()
+    this.#ctx.stroke()
+  }
+
+  #drawCircle = () => {
+    if (!this.#fillColor || !this.#borderColor || !this.#borderRadius) return
+
+    this.#ctx.fillStyle = this.#fillColor
+    this.#ctx.strokeStyle = this.#borderColor
+    this.#ctx.beginPath()
+    this.#ctx.arc(this.#x, this.#y, defaults.circle.radius, 0, 2 * Math.PI)
+    this.#ctx.fill()
+    this.#ctx.stroke()
+  }
+
+  public draw = () => {
+    switch (this.#type) {
       case "rectangle":
-        this.drawRectangle()
+        this.#drawRectangle()
         break
       case "circle":
-        this.drawCircle()
+        this.#drawCircle()
         break
       default:
-        assertExhaustiveGuard(this.type)
+        assertExhaustiveGuard(this.#type)
     }
-  }
-
-  private drawRectangle() {
-    if (!this.fillColor || !this.borderColor || !this.borderRadius) return
-
-    this.ctx.fillStyle = this.fillColor
-    this.ctx.strokeStyle = this.borderColor
-    this.ctx.beginPath()
-    this.ctx.roundRect(
-      this.x,
-      this.y,
-      this.x + defaults.rectangle.width,
-      this.y + defaults.rectangle.height,
-      [this.borderRadius],
-    )
-    this.ctx.fill()
-    this.ctx.stroke()
-  }
-
-  private drawCircle() {
-    if (!this.fillColor || !this.borderColor || !this.borderRadius) return
-
-    this.ctx.fillStyle = this.fillColor
-    this.ctx.strokeStyle = this.borderColor
-    this.ctx.beginPath()
-    this.ctx.arc(this.x, this.y, defaults.circle.radius, 0, 2 * Math.PI)
-    this.ctx.fill()
-    this.ctx.stroke()
   }
 
   public init() {
