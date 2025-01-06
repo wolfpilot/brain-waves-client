@@ -11,11 +11,15 @@ export interface Props {
 export const useEngineStore = defineStore("engine", () => {
   const state = reactive({
     nodes: ref<CanvasNode[]>([]),
+    activeNodeIndex: ref<number | null>(null),
   })
 
   const actions = {
     addNode(node: CanvasNode) {
       state.nodes.push(node)
+    },
+    setActiveNodeIndex(val: number | null) {
+      state.activeNodeIndex = val
     },
   }
 

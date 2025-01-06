@@ -19,6 +19,7 @@ export interface Props {
 export interface CanvasNode {
   init: () => void
   draw: () => void
+  place: () => void
 }
 
 // Setup
@@ -118,6 +119,21 @@ class CanvasNodeImpl implements CanvasNode {
     this.#fillColor = cssFillColor as string
     this.#borderColor = cssBorderColor as string
     this.#borderRadius = parseInt(cssBorderRadius as string, 10)
+  }
+
+  public place = () => {
+    if (!this.#canvasStore.cssVars) return
+
+    const newCssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
+    const newCssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
+
+    if (!newCssFillColor || !newCssBorderColor) return
+
+    this.#updatePosition()
+
+    this.#fillColor = newCssFillColor as string
+    this.#borderColor = newCssBorderColor as string
+    this.#mode = "static"
   }
 
   public draw = () => {
