@@ -1,4 +1,4 @@
-import { ref, reactive } from "vue"
+import { ref, reactive, readonly, toRefs } from "vue"
 import { defineStore } from "pinia"
 
 // Utils
@@ -20,7 +20,7 @@ export const useEngineStore = defineStore("engine", () => {
   }
 
   return {
-    ...state,
+    ...toRefs(readonly(state)),
     ...actions,
   }
 })

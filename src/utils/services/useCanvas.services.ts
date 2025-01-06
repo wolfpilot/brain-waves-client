@@ -1,29 +1,35 @@
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
+// Constants
+import { TOOLBAR_TOOLS } from "@constants/toolbar.constants"
+
 // Stores
 import { useCanvasStore } from "@stores/canvas.stores"
 
 // Utils
+import { useEngine } from "@utils/services/useEngine.services"
 import { setCssVar } from "@utils/helpers/dom.helpers"
 
 export const useCanvas = () => {
-  const store = useCanvasStore()
+  const canvasStore = useCanvasStore()
+  const engineService = useEngine()
 
+  // Helpers
   const _centre = () => {
-    if (!store.canvasSize || !store.gridSize) return
+    if (!canvasStore.canvasSize || !canvasStore.gridSize) return
 
-    const newX = store.canvasSize.width / 2 - store.gridSize.width / 2
-    const newY = store.canvasSize.height / 2 - store.gridSize.height / 2
+    const newX = canvasStore.canvasSize.width / 2 - canvasStore.gridSize.width / 2
+    const newY = canvasStore.canvasSize.height / 2 - canvasStore.gridSize.height / 2
 
-    store.setViewportPos({
+    canvasStore.setViewportPos({
       x: newX,
       y: newY,
     })
   }
 
   const _zoom = (level: number) => {
-    if (!store.cssVars) return
+    if (!canvasStore.cssVars) return
 
     const modifier = 1 + level * canvasConfig.zoom.stepSize
 
@@ -32,7 +38,7 @@ export const useCanvas = () => {
     const newGridHeight = Math.round(modifier * canvasConfig.grid.maxHeight)
 
     // Bundle Map updates
-    const newCssVars = new Map([...store.cssVars])
+    const newCssVars = new Map([...canvasStore.cssVars])
 
     newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
     newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
@@ -44,34 +50,52 @@ export const useCanvas = () => {
     setCssVar("--canvas-grid-height", `${newGridHeight}px`)
 
     // Update store
-    store.setCssVars(newCssVars)
-    store.setGridSize({
+    canvasStore.setCssVars(newCssVars)
+    canvasStore.setGridSize({
       width: newGridWidth,
       height: newGridHeight,
     })
-    store.setZoomLevel(level)
+    canvasStore.setZoomLevel(level)
   }
 
-  const zoomIn = () => {
-    const newLevel = Math.min(store.zoomLevel + 1, canvasConfig.zoom.max)
+  // API
+  const doSelect = () => {
+    canvasStore.setActiveTool(TOOLBAR_TOOLS.select)
+  }
+
+  const doRectangle = () => {
+    canvasStore.setActiveTool(TOOLBAR_TOOLS.rectangle)
+    engineService.addRectangle()
+  }
+
+  const doCircle = () => {
+    canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
+    engineService.addCircle()
+  }
+
+  const doZoomIn = () => {
+    const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
 
     _zoom(newLevel)
   }
 
-  const zoomOut = () => {
-    const newLevel = Math.max(store.zoomLevel - 1, canvasConfig.zoom.min)
+  const doZoomOut = () => {
+    const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
 
     _zoom(newLevel)
   }
 
-  const reset = () => {
+  const doReset = () => {
     _zoom(canvasConfig.zoom.default)
     _centre()
   }
 
   return {
-    zoomIn,
-    zoomOut,
-    reset,
+    doSelect,
+    doCircle,
+    doRectangle,
+    doZoomIn,
+    doZoomOut,
+    doReset,
   }
 }

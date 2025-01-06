@@ -1,22 +1,27 @@
+// Types
+import type { NodeType } from "@utils/canvas/nodes/Node.canvas"
+
 // Stores
 import { useEngineStore } from "@stores/engine.stores"
-import { useCanvasStore } from "@stores/canvas.stores"
+import { useIoStore } from "@stores/io.stores"
 
 // Utils
 import { CanvasNode } from "@utils/canvas/nodes"
 
 export const useEngine = () => {
   const engineStore = useEngineStore()
-  const canvasStore = useCanvasStore()
+  const ioStore = useIoStore()
 
-  const addRectangle = (): CanvasNode | void => {
-    if (!canvasStore.ctx) return
+  // Helpers
+  const _addNode = (type: NodeType): CanvasNode | void => {
+    if (!ioStore.mousePos) return
 
     const node = new CanvasNode({
-      ctx: canvasStore.ctx,
-      type: "rectangle",
-      x: 200,
-      y: 200,
+      type,
+      pos: {
+        x: ioStore.mousePos.x,
+        y: ioStore.mousePos.y,
+      },
     })
 
     node.init()
@@ -25,21 +30,10 @@ export const useEngine = () => {
     return node
   }
 
-  const addCircle = (): CanvasNode | void => {
-    if (!canvasStore.ctx) return
+  // API
+  const addRectangle = (): CanvasNode | void => _addNode("rectangle")
 
-    const node = new CanvasNode({
-      ctx: canvasStore.ctx,
-      type: "circle",
-      x: 200,
-      y: 200,
-    })
-
-    node.init()
-    engineStore.addNode(node)
-
-    return node
-  }
+  const addCircle = (): CanvasNode | void => _addNode("circle")
 
   return {
     addRectangle,

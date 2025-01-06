@@ -12,38 +12,9 @@ import { TOOLBAR_TOOLS, TOOLBAR_CONTROLS } from "@constants/toolbar.constants"
 
 // Utils
 import { useCanvas } from "@utils/services/useCanvas.services"
-import { useEngine } from "@utils/services/useEngine.services"
 
 const canvasStore = useCanvasStore()
 const canvasService = useCanvas()
-const engineService = useEngine()
-
-// Handlers
-const handleOnSelect = () => {
-  canvasStore.setActiveTool(TOOLBAR_TOOLS.select)
-}
-
-const handleOnAddRectangle = () => {
-  canvasStore.setActiveTool(TOOLBAR_TOOLS.rectangle)
-  engineService.addRectangle()
-}
-
-const handleOnAddCircle = () => {
-  canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
-  engineService.addCircle()
-}
-
-const handleOnReset = () => {
-  canvasService.reset()
-}
-
-const handleOnZoomIn = () => {
-  canvasService.zoomIn()
-}
-
-const handleOnZoomOut = () => {
-  canvasService.zoomOut()
-}
 </script>
 
 <template>
@@ -52,7 +23,7 @@ const handleOnZoomOut = () => {
       <button
         :class="[$style.btn, canvasStore.activeTool === TOOLBAR_TOOLS.select && $style.isActive]"
         :title="TOOLBAR_TOOLS.select"
-        @click="handleOnSelect"
+        @click="canvasService.doSelect"
       >
         <CursorIcon :class="[$style.btnIcon, $style.btnIconFill]" />
       </button>
@@ -60,29 +31,33 @@ const handleOnZoomOut = () => {
       <button
         :class="[$style.btn, canvasStore.activeTool === TOOLBAR_TOOLS.rectangle && $style.isActive]"
         :title="TOOLBAR_TOOLS.rectangle"
-        @click="handleOnAddRectangle"
+        @click="canvasService.doRectangle"
       >
         <SquareIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
       <button
         :class="[$style.btn, canvasStore.activeTool === TOOLBAR_TOOLS.circle && $style.isActive]"
         :title="TOOLBAR_TOOLS.circle"
-        @click="handleOnAddCircle"
+        @click="canvasService.doCircle"
       >
         <CircleIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
     </div>
 
     <div :class="$style.btnGroup">
-      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.reset" @click="handleOnReset">
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.reset" @click="canvasService.doReset">
         <ViewfinderCircleIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomIn" @click="handleOnZoomIn">
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomIn" @click="canvasService.doZoomIn">
         <PlusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomOut" @click="handleOnZoomOut">
+      <button
+        :class="$style.btn"
+        :title="TOOLBAR_CONTROLS.zoomOut"
+        @click="canvasService.doZoomOut"
+      >
         <MinusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
     </div>

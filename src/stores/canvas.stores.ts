@@ -67,6 +67,9 @@ export const useCanvasStore = defineStore("canvas", () => {
     setZoomLevel(val: number) {
       state.zoomLevel = val
     },
+    resetActiveTool() {
+      state.activeTool = TOOLBAR_TOOLS.select
+    },
   }
 
   return {

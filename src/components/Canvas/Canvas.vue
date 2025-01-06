@@ -127,7 +127,7 @@ onMounted(() => {
   updateCanvasSize()
   updateGridSize()
 
-  canvasService.reset()
+  canvasService.doReset()
 
   // Initialize entities
   const engine = new Engine()
@@ -167,7 +167,7 @@ const onWheelOffsetYChange = (
   state: IoStore["wheelOffsetY"],
   prevState: IoStore["wheelOffsetY"],
 ) => {
-  return state - prevState < 0 ? canvasService.zoomIn() : canvasService.zoomOut()
+  return state - prevState < 0 ? canvasService.doZoomIn() : canvasService.doZoomOut()
 }
 
 watch(windowSize, onWindowSizeChange)

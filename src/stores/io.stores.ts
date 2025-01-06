@@ -1,13 +1,18 @@
-import { reactive, readonly, toRefs } from "vue"
+import { reactive, computed, readonly, toRefs } from "vue"
 import { defineStore } from "pinia"
 
 // Types
 import { type Coords, type Dimensions } from "@ts/math.types"
 
+// Stores
+import { useCanvasStore } from "./canvas.stores"
+
 // Constants
 import { type MouseBtnValuesTypes } from "@constants/keys.constants"
 
 export const useIoStore = defineStore("io", () => {
+  const canvasStore = useCanvasStore()
+
   const state = reactive({
     windowSize: <Dimensions>{
       width: window.innerWidth,
@@ -17,6 +22,17 @@ export const useIoStore = defineStore("io", () => {
     wheelOffsetY: <number>0,
     activeMouseButtons: <Map<MouseBtnValuesTypes, boolean>>new Map(),
   })
+
+  const getters = {
+    mousePosOffset: computed(() => {
+      if (!state.mousePos || !canvasStore.siteHeaderHeight) return null
+
+      return {
+        x: state.mousePos.x,
+        y: state.mousePos.y - canvasStore.siteHeaderHeight,
+      }
+    }),
+  }
 
   const actions = {
     setWindowSize(val: Dimensions) {
@@ -35,6 +51,7 @@ export const useIoStore = defineStore("io", () => {
 
   return {
     ...toRefs(readonly(state)),
+    ...getters,
     ...actions,
   }
 })
