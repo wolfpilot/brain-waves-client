@@ -62,17 +62,23 @@ const useCanvas = () => {
 
   // API
   const doSelect = () => {
+    engineService.clearActiveNode()
+
     canvasStore.setActiveTool(TOOLBAR_TOOLS.select)
   }
 
   const doRectangle = () => {
-    canvasStore.setActiveTool(TOOLBAR_TOOLS.rectangle)
+    engineService.clearActiveNode()
     engineService.addRectangle()
+
+    canvasStore.setActiveTool(TOOLBAR_TOOLS.rectangle)
   }
 
   const doCircle = () => {
-    canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
+    engineService.clearActiveNode()
     engineService.addCircle()
+
+    canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
   }
 
   const doZoomIn = () => {

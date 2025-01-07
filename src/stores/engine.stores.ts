@@ -18,6 +18,9 @@ export const useEngineStore = defineStore("engine", () => {
     addNode(id: string, node: CanvasNode) {
       state.nodes.set(id, node)
     },
+    removeNode(id: string) {
+      state.nodes.delete(id)
+    },
     setActiveNodeId(val: string | null) {
       state.activeNodeId = val
     },

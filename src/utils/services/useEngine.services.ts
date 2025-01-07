@@ -52,6 +52,12 @@ const useEngine = () => {
   }
 
   // API
+  const clearActiveNode = () => {
+    if (!engineStore.activeNodeId) return
+
+    engineStore.removeNode(engineStore.activeNodeId)
+  }
+
   const addRectangle = (): CanvasNode | void => _addNode("rectangle")
 
   const addCircle = (): CanvasNode | void => _addNode("circle")
@@ -86,6 +92,7 @@ const useEngine = () => {
   watch(ioStore.activeMouseButtons, handleOnClick)
 
   return {
+    clearActiveNode,
     addRectangle,
     addCircle,
   }
