@@ -1,5 +1,6 @@
 import { watch } from "vue"
 import { createSharedComposable } from "@vueuse/core"
+import { v4 as uuidv4 } from "uuid"
 
 // Types
 import type { NodeType } from "@utils/canvas/nodes/Node.canvas"
@@ -22,6 +23,7 @@ const useEngine = () => {
   const _addNode = (type: NodeType): CanvasNode | void => {
     if (!ioStore.mousePos) return
 
+    const newId = uuidv4()
     const node = new CanvasNode({
       type,
       pos: {
@@ -31,17 +33,21 @@ const useEngine = () => {
     })
 
     node.init()
-    engineStore.addNode(node)
-    engineStore.setActiveNodeIndex(engineStore.nodes.length - 1)
+    engineStore.addNode(newId, node)
+    engineStore.setActiveNodeId(newId)
 
     return node
   }
 
   const _placeNode = () => {
-    if (engineStore.activeNodeIndex === null) return
+    if (!engineStore.activeNodeId) return
 
-    engineStore.nodes[engineStore.activeNodeIndex].place()
-    engineStore.setActiveNodeIndex(null)
+    const activeNode = engineStore.nodes.get(engineStore.activeNodeId)
+
+    if (!activeNode) return
+
+    activeNode.place()
+    engineStore.setActiveNodeId(null)
     canvasStore.resetActiveTool()
   }
 
