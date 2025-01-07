@@ -6,7 +6,7 @@ import { RouterView } from "vue-router"
 import { useWebSocketStore } from "@stores/index"
 
 // Utils
-import { useWebSocket } from "@utils/services/useWebSocket.services"
+import { useWebSocket } from "@utils/services"
 
 // Components
 import { SiteHeader, SiteFooter } from "@components/Site"

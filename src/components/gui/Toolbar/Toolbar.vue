@@ -11,7 +11,7 @@ import { useCanvasStore } from "@stores/canvas.stores"
 import { TOOLBAR_TOOLS, TOOLBAR_CONTROLS } from "@constants/toolbar.constants"
 
 // Utils
-import { useCanvas } from "@utils/services/useCanvas.services"
+import { useCanvas } from "@utils/services"
 
 const canvasStore = useCanvasStore()
 const canvasService = useCanvas()

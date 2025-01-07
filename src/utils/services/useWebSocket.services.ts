@@ -1,9 +1,10 @@
 import { ref, onUnmounted } from "vue"
+import { createSharedComposable } from "@vueuse/core"
 
 // Constants
 import { WS_ENDPOINT_URL } from "@constants/api.constants"
 
-export const useWebSocket = () => {
+const useWebSocket = () => {
   const ws = ref<WebSocket | null>(null)
   const messages = ref<string[]>([])
   const isConnected = ref<boolean>(false)
@@ -78,3 +79,5 @@ export const useWebSocket = () => {
     sendMessage,
   }
 }
+
+export default createSharedComposable(useWebSocket)

@@ -1,4 +1,5 @@
 import { watch } from "vue"
+import { createSharedComposable } from "@vueuse/core"
 
 // Types
 import type { NodeType } from "@utils/canvas/nodes/Node.canvas"
@@ -12,7 +13,7 @@ import { useIoStore, type IoStore } from "@stores/io.stores"
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 import { CanvasNode } from "@utils/canvas/nodes"
 
-export const useEngine = () => {
+const useEngine = () => {
   const engineStore = useEngineStore()
   const canvasStore = useCanvasStore()
   const ioStore = useIoStore()
@@ -72,7 +73,6 @@ export const useEngine = () => {
         handleOnLeftClick()
         break
       default:
-        console.log("here")
         break
     }
   }
@@ -84,3 +84,5 @@ export const useEngine = () => {
     addCircle,
   }
 }
+
+export default createSharedComposable(useEngine)

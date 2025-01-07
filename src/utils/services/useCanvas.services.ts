@@ -1,3 +1,5 @@
+import { createSharedComposable } from "@vueuse/core"
+
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
@@ -8,10 +10,10 @@ import { TOOLBAR_TOOLS } from "@constants/toolbar.constants"
 import { useCanvasStore } from "@stores/canvas.stores"
 
 // Utils
-import { useEngine } from "@utils/services/useEngine.services"
+import { useEngine } from "@utils/services"
 import { setCssVar } from "@utils/helpers/dom.helpers"
 
-export const useCanvas = () => {
+const useCanvas = () => {
   const canvasStore = useCanvasStore()
   const engineService = useEngine()
 
@@ -99,3 +101,5 @@ export const useCanvas = () => {
     doReset,
   }
 }
+
+export default createSharedComposable(useCanvas)

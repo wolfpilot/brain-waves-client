@@ -13,10 +13,10 @@ import { type IoStore, useIoStore } from "@stores/io.stores"
 import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
-import { useCanvas } from "@utils/services/useCanvas.services"
+import { useCanvas } from "@utils/services"
 import { getCssVars } from "@utils/helpers/dom.helpers"
 import Engine from "@utils/canvas/core/Engine.canvas"
-import IoManager from "@utils/managers/io.managers"
+import { IoManager } from "@utils/managers"
 
 // Components
 import { Toolbar } from "@components/gui"
