@@ -34,75 +34,75 @@ const defaults = {
 }
 
 class CanvasNodeImpl implements CanvasNode {
+  mode: NodeMode
+  type: NodeType
+  pos: Coords
+  fillColor: string | null
+  borderColor: string | null
+  borderRadius: number | null
   #canvasStore: CanvasStore
   #ioStore: IoStore
-  #mode: NodeMode
-  #type: NodeType
-  #pos: Coords
-  #fillColor: string | null
-  #borderColor: string | null
-  #borderRadius: number | null
 
   constructor({ type, pos }: Props) {
+    this.mode = "preview"
+    this.type = type
+    this.pos = pos
+    this.fillColor = null
+    this.borderColor = null
+    this.borderRadius = null
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
-    this.#mode = "preview"
-    this.#type = type
-    this.#pos = pos
-    this.#fillColor = null
-    this.#borderColor = null
-    this.#borderRadius = null
   }
 
   #updatePosition = () => {
     if (!this.#ioStore.mousePosOffset) return
 
-    switch (this.#type) {
+    switch (this.type) {
       case "rectangle":
-        this.#pos = {
+        this.pos = {
           x: this.#ioStore.mousePosOffset.x - defaults.rectangle.width / 2,
           y: this.#ioStore.mousePosOffset.y - defaults.rectangle.height / 2,
         }
         break
       case "circle":
-        this.#pos = {
+        this.pos = {
           x: this.#ioStore.mousePosOffset.x,
           y: this.#ioStore.mousePosOffset.y,
         }
         break
       default:
-        assertExhaustiveGuard(this.#type)
+        assertExhaustiveGuard(this.type)
     }
   }
 
   #drawRectangle = () => {
-    if (!this.#canvasStore.ctx || !this.#fillColor || !this.#borderColor || !this.#borderRadius) {
+    if (!this.#canvasStore.ctx || !this.fillColor || !this.borderColor || !this.borderRadius) {
       return
     }
 
-    this.#canvasStore.ctx.fillStyle = this.#fillColor
-    this.#canvasStore.ctx.strokeStyle = this.#borderColor
+    this.#canvasStore.ctx.fillStyle = this.fillColor
+    this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.roundRect(
-      this.#pos.x,
-      this.#pos.y,
+      this.pos.x,
+      this.pos.y,
       defaults.rectangle.width,
       defaults.rectangle.height,
-      [this.#borderRadius],
+      [this.borderRadius],
     )
     this.#canvasStore.ctx.fill()
     this.#canvasStore.ctx.stroke()
   }
 
   #drawCircle = () => {
-    if (!this.#canvasStore.ctx || !this.#fillColor || !this.#borderColor) {
+    if (!this.#canvasStore.ctx || !this.fillColor || !this.borderColor) {
       return
     }
 
-    this.#canvasStore.ctx.fillStyle = this.#fillColor
-    this.#canvasStore.ctx.strokeStyle = this.#borderColor
+    this.#canvasStore.ctx.fillStyle = this.fillColor
+    this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
-    this.#canvasStore.ctx.arc(this.#pos.x, this.#pos.y, defaults.circle.radius, 0, 2 * Math.PI)
+    this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, defaults.circle.radius, 0, 2 * Math.PI)
     this.#canvasStore.ctx.fill()
     this.#canvasStore.ctx.stroke()
   }
@@ -116,9 +116,9 @@ class CanvasNodeImpl implements CanvasNode {
 
     if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
 
-    this.#fillColor = cssFillColor as string
-    this.#borderColor = cssBorderColor as string
-    this.#borderRadius = parseInt(cssBorderRadius as string, 10)
+    this.fillColor = cssFillColor as string
+    this.borderColor = cssBorderColor as string
+    this.borderRadius = parseInt(cssBorderRadius as string, 10)
   }
 
   public place = () => {
@@ -131,23 +131,23 @@ class CanvasNodeImpl implements CanvasNode {
 
     this.#updatePosition()
 
-    this.#fillColor = newCssFillColor as string
-    this.#borderColor = newCssBorderColor as string
-    this.#mode = "static"
+    this.fillColor = newCssFillColor as string
+    this.borderColor = newCssBorderColor as string
+    this.mode = "static"
   }
 
   public draw = () => {
-    switch (this.#mode) {
+    switch (this.mode) {
       case "preview":
         this.#updatePosition()
         break
       case "static":
         break
       default:
-        assertExhaustiveGuard(this.#mode)
+        assertExhaustiveGuard(this.mode)
     }
 
-    switch (this.#type) {
+    switch (this.type) {
       case "rectangle":
         this.#drawRectangle()
         break
@@ -155,7 +155,7 @@ class CanvasNodeImpl implements CanvasNode {
         this.#drawCircle()
         break
       default:
-        assertExhaustiveGuard(this.#type)
+        assertExhaustiveGuard(this.type)
     }
   }
 
