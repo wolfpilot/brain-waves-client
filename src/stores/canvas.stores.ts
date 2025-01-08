@@ -1,66 +1,115 @@
-import { ref } from "vue"
+import { ref, reactive, computed, readonly, toRefs } from "vue"
 import { defineStore } from "pinia"
 
 // Types
-import { type Coords } from "@ts/math.types"
+import { type Coords, type Dimensions } from "@ts/math.types"
 
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
-export type CANVAS_RESET = "CANVAS/RESET"
-export type CANVAS_ZOOM_IN = "CANVAS/ZOOM_IN"
-export type CANVAS_ZOOM_OUT = "CANVAS/ZOOM_OUT"
+// Constants
+import { type ToolValueTypes, TOOLBAR_TOOLS } from "@constants/toolbar.constants"
 
-export type ACTIONS_CANVAS = CANVAS_RESET | CANVAS_ZOOM_IN | CANVAS_ZOOM_OUT
-
-export interface ACTION_CANVAS_RESET {
-  type: CANVAS_RESET
-}
-
-export interface ACTION_CANVAS_ZOOM_IN {
-  type: CANVAS_ZOOM_IN
-}
-
-export interface ACTION_CANVAS_ZOOM_OUT {
-  type: CANVAS_ZOOM_OUT
-}
-
-export type ACTION_CANVAS = ACTION_CANVAS_RESET | ACTION_CANVAS_ZOOM_IN | ACTION_CANVAS_ZOOM_OUT
-
+/**
+ * Create a store with state as read-only values, updatable via actions
+ *
+ * @see https://github.com/vuejs/pinia/issues/58
+ */
 export const useCanvasStore = defineStore("canvas", () => {
-  const cssVars = ref<Map<string, CSSUnparsedSegment> | null>(null)
-  const x = ref<number | null>(null)
-  const y = ref<number | null>(null)
-  const width = ref<number | null>(null)
-  const height = ref<number | null>(null)
-  const viewportPos = ref<Coords | null>(null)
-  const mousePos = ref<Coords | null>(null)
-  const zoomLevel = ref<number>(canvasConfig.zoom.default)
+  // Context cannot be read-only, but this is a good way to share it across consumers
+  const ctx = ref<CanvasRenderingContext2D | null>(null)
 
-  const actionReset = (): ACTION_CANVAS_RESET => ({
-    type: "CANVAS/RESET",
+  const state = reactive({
+    cssVars: <Map<string, CSSUnparsedSegment> | null>null,
+    canvasSize: <Dimensions | null>null,
+    gridSize: <Dimensions | null>null,
+    viewportPos: <Coords | null>null,
+    zoomLevel: <number>canvasConfig.zoom.default,
+    activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
   })
 
-  const actionZoomIn = (): ACTION_CANVAS_ZOOM_IN => ({
-    type: "CANVAS/ZOOM_IN",
+  // Getters
+  const zoomScale = computed(() => 1 + state.zoomLevel / 10)
+
+  const centrePos = computed(() => {
+    if (!state.canvasSize || !state.gridSize) return null
+
+    return {
+      x: (state.canvasSize.width - state.gridSize.width) / 2,
+      y: (state.canvasSize.height - state.gridSize.height) / 2,
+    }
   })
 
-  const actionZoomOut = (): ACTION_CANVAS_ZOOM_OUT => ({
-    type: "CANVAS/ZOOM_OUT",
+  const viewportOffset = computed(() => {
+    if (!centrePos.value || !state.viewportPos) {
+      return {
+        x: 0,
+        y: 0,
+      }
+    }
+
+    return {
+      x: state.viewportPos.x - centrePos.value.x,
+      y: state.viewportPos.y - centrePos.value.y,
+    }
   })
+
+  const siteHeaderHeight = computed(() => {
+    if (!state.cssVars) return null
+
+    const cssSiteHeaderHeight = state.cssVars.get("--size-siteHeaderHeight") as string
+
+    return parseInt(cssSiteHeaderHeight, 10)
+  })
+
+  const siteFooterHeight = computed(() => {
+    if (!state.cssVars) return null
+
+    const cssSiteFooterHeight = state.cssVars.get("--size-siteFooterHeight") as string
+
+    return parseInt(cssSiteFooterHeight, 10)
+  })
+
+  const getters = {
+    centrePos,
+    viewportOffset,
+    zoomScale,
+    siteHeaderHeight,
+    siteFooterHeight,
+  }
+
+  const actions = {
+    setContext(val: CanvasRenderingContext2D) {
+      ctx.value = val
+    },
+    setCssVars(val: Map<string, CSSUnparsedSegment>) {
+      state.cssVars = val
+    },
+    setCanvasSize(val: Dimensions) {
+      state.canvasSize = val
+    },
+    setGridSize(val: Dimensions) {
+      state.gridSize = val
+    },
+    setViewportPos(val: Coords) {
+      state.viewportPos = val
+    },
+    setActiveTool(val: ToolValueTypes) {
+      state.activeTool = val
+    },
+    setZoomLevel(val: number) {
+      state.zoomLevel = val
+    },
+    resetActiveTool() {
+      state.activeTool = TOOLBAR_TOOLS.select
+    },
+  }
 
   return {
-    cssVars,
-    x,
-    y,
-    width,
-    height,
-    viewportPos,
-    mousePos,
-    zoomLevel,
-    actionReset,
-    actionZoomIn,
-    actionZoomOut,
+    ctx,
+    ...toRefs(readonly(state)),
+    ...getters,
+    ...actions,
   }
 })
 
