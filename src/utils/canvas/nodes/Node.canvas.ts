@@ -59,23 +59,24 @@ class CanvasNodeImpl implements CanvasNode {
       return
     }
 
+    const dX =
+      (this.#ioStore.mousePosOffset.x - this.#canvasStore.viewportOffset.x) /
+      this.#canvasStore.zoomScale
+    const dY =
+      (this.#ioStore.mousePosOffset.y - this.#canvasStore.viewportOffset.y) /
+      this.#canvasStore.zoomScale
+
     switch (this.type) {
       case "rectangle":
         this.pos = {
-          x:
-            this.#ioStore.mousePosOffset.x -
-            defaults.rectangle.width / 2 -
-            this.#canvasStore.viewportOffset.x,
-          y:
-            this.#ioStore.mousePosOffset.y -
-            defaults.rectangle.height / 2 -
-            this.#canvasStore.viewportOffset.y,
+          x: dX - defaults.rectangle.width / 2,
+          y: dY - defaults.rectangle.height / 2,
         }
         break
       case "circle":
         this.pos = {
-          x: this.#ioStore.mousePosOffset.x - this.#canvasStore.viewportOffset.x,
-          y: this.#ioStore.mousePosOffset.y - this.#canvasStore.viewportOffset.y,
+          x: dX,
+          y: dY,
         }
         break
       default:

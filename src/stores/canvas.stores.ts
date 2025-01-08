@@ -29,6 +29,8 @@ export const useCanvasStore = defineStore("canvas", () => {
   })
 
   // Getters
+  const zoomScale = computed(() => 1 + state.zoomLevel / 10)
+
   const centrePos = computed(() => {
     if (!state.canvasSize || !state.gridSize) return null
 
@@ -47,8 +49,8 @@ export const useCanvasStore = defineStore("canvas", () => {
     }
 
     return {
-      x: centrePos.value.x + state.viewportPos.x,
-      y: centrePos.value.y + state.viewportPos.y,
+      x: state.viewportPos.x - centrePos.value.x,
+      y: state.viewportPos.y - centrePos.value.y,
     }
   })
 
@@ -71,6 +73,7 @@ export const useCanvasStore = defineStore("canvas", () => {
   const getters = {
     centrePos,
     viewportOffset,
+    zoomScale,
     siteHeaderHeight,
     siteFooterHeight,
   }

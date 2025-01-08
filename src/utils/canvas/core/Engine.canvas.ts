@@ -34,6 +34,12 @@ class EngineImpl implements Engine {
     )
   }
 
+  #scale = () => {
+    if (!this.#canvasStore.ctx) return
+
+    this.#canvasStore.ctx.scale(this.#canvasStore.zoomScale, this.#canvasStore.zoomScale)
+  }
+
   #pan = () => {
     if (!this.#canvasStore.ctx || !this.#canvasStore.viewportOffset) return
 
@@ -46,15 +52,18 @@ class EngineImpl implements Engine {
   #render = () => {
     if (!this.#canvasStore.ctx) return
 
-    this.#canvasStore.ctx.restore()
     this.#clear()
+
     this.#canvasStore.ctx.save()
 
+    // Apply transforms
     this.#pan()
-
+    this.#scale()
     this.#engineStore.nodes.forEach((node) => node.draw())
 
-    window.requestAnimationFrame(() => this.#render())
+    this.#canvasStore.ctx.restore()
+
+    window.requestAnimationFrame(this.#render)
   }
 
   #placeNode = () => {

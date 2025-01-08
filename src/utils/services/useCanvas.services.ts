@@ -30,11 +30,9 @@ const useCanvas = () => {
   const _zoom = (level: number) => {
     if (!canvasStore.cssVars) return
 
-    const modifier = 1 + level * canvasConfig.zoom.stepSize
-
-    const newGridTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
-    const newGridWidth = Math.round(modifier * canvasConfig.grid.maxWidth)
-    const newGridHeight = Math.round(modifier * canvasConfig.grid.maxHeight)
+    const newGridTileSize = Math.round(canvasStore.zoomScale * canvasConfig.grid.tileSize)
+    const newGridWidth = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxWidth)
+    const newGridHeight = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxHeight)
 
     // Bundle Map updates
     const newCssVars = new Map([...canvasStore.cssVars])
