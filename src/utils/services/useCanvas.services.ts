@@ -19,14 +19,11 @@ const useCanvas = () => {
 
   // Helpers
   const _centre = () => {
-    if (!canvasStore.canvasSize || !canvasStore.gridSize) return
-
-    const newX = canvasStore.canvasSize.width / 2 - canvasStore.gridSize.width / 2
-    const newY = canvasStore.canvasSize.height / 2 - canvasStore.gridSize.height / 2
+    if (!canvasStore.centrePos) return
 
     canvasStore.setViewportPos({
-      x: newX,
-      y: newY,
+      x: canvasStore.centrePos.x,
+      y: canvasStore.centrePos.y,
     })
   }
 

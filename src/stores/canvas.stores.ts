@@ -28,21 +28,51 @@ export const useCanvasStore = defineStore("canvas", () => {
     activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
   })
 
+  // Getters
+  const centrePos = computed(() => {
+    if (!state.canvasSize || !state.gridSize) return null
+
+    return {
+      x: (state.canvasSize.width - state.gridSize.width) / 2,
+      y: (state.canvasSize.height - state.gridSize.height) / 2,
+    }
+  })
+
+  const viewportOffset = computed(() => {
+    if (!centrePos.value || !state.viewportPos) {
+      return {
+        x: 0,
+        y: 0,
+      }
+    }
+
+    return {
+      x: centrePos.value.x + state.viewportPos.x,
+      y: centrePos.value.y + state.viewportPos.y,
+    }
+  })
+
+  const siteHeaderHeight = computed(() => {
+    if (!state.cssVars) return null
+
+    const cssSiteHeaderHeight = state.cssVars.get("--size-siteHeaderHeight") as string
+
+    return parseInt(cssSiteHeaderHeight, 10)
+  })
+
+  const siteFooterHeight = computed(() => {
+    if (!state.cssVars) return null
+
+    const cssSiteFooterHeight = state.cssVars.get("--size-siteFooterHeight") as string
+
+    return parseInt(cssSiteFooterHeight, 10)
+  })
+
   const getters = {
-    siteHeaderHeight: computed(() => {
-      if (!state.cssVars) return null
-
-      const cssSiteHeaderHeight = state.cssVars.get("--size-siteHeaderHeight") as string
-
-      return parseInt(cssSiteHeaderHeight, 10)
-    }),
-    siteFooterHeight: computed(() => {
-      if (!state.cssVars) return null
-
-      const cssSiteFooterHeight = state.cssVars.get("--size-siteFooterHeight") as string
-
-      return parseInt(cssSiteFooterHeight, 10)
-    }),
+    centrePos,
+    viewportOffset,
+    siteHeaderHeight,
+    siteFooterHeight,
   }
 
   const actions = {
