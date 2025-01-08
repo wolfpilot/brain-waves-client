@@ -19,25 +19,20 @@ const useCanvas = () => {
 
   // Helpers
   const _centre = () => {
-    if (!canvasStore.canvasSize || !canvasStore.gridSize) return
-
-    const newX = canvasStore.canvasSize.width / 2 - canvasStore.gridSize.width / 2
-    const newY = canvasStore.canvasSize.height / 2 - canvasStore.gridSize.height / 2
+    if (!canvasStore.centrePos) return
 
     canvasStore.setViewportPos({
-      x: newX,
-      y: newY,
+      x: canvasStore.centrePos.x,
+      y: canvasStore.centrePos.y,
     })
   }
 
   const _zoom = (level: number) => {
     if (!canvasStore.cssVars) return
 
-    const modifier = 1 + level * canvasConfig.zoom.stepSize
-
-    const newGridTileSize = Math.round(modifier * canvasConfig.grid.tileSize)
-    const newGridWidth = Math.round(modifier * canvasConfig.grid.maxWidth)
-    const newGridHeight = Math.round(modifier * canvasConfig.grid.maxHeight)
+    const newGridTileSize = Math.round(canvasStore.zoomScale * canvasConfig.grid.tileSize)
+    const newGridWidth = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxWidth)
+    const newGridHeight = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxHeight)
 
     // Bundle Map updates
     const newCssVars = new Map([...canvasStore.cssVars])
