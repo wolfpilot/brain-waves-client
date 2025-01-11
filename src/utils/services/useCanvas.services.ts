@@ -30,6 +30,12 @@ const useCanvas = () => {
   const _zoom = (level: number) => {
     if (!canvasStore.cssVars) return
 
+    /**
+     * NOTE: It's important to first update the zoomLevel
+     * based on which the scale will then be computed.
+     */
+    canvasStore.setZoomLevel(level)
+
     const newGridTileSize = Math.round(canvasStore.zoomScale * canvasConfig.grid.tileSize)
     const newGridWidth = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxWidth)
     const newGridHeight = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxHeight)
@@ -52,7 +58,6 @@ const useCanvas = () => {
       width: newGridWidth,
       height: newGridHeight,
     })
-    canvasStore.setZoomLevel(level)
   }
 
   // API
