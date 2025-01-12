@@ -31,17 +31,30 @@ export const useCanvasStore = defineStore("canvas", () => {
   // Getters
   const zoomScale = computed(() => 1 + state.zoomLevel / 10)
 
-  const centrePos = computed(() => {
-    if (!state.canvasSize || !state.gridSize) return null
+  /**
+   * The amount the centre has to be translated to make it relative
+   * to the middle of the grid, rather than top-left.
+   */
+  const centreOffset = computed(() => {
+    if (!state.gridSize) return null
 
     return {
-      x: (state.canvasSize.width - state.gridSize.width) / 2,
-      y: (state.canvasSize.height - state.gridSize.height) / 2,
+      x: state.gridSize.width / 2,
+      y: state.gridSize.height / 2,
     }
   })
 
+  /**
+   * The amount the viewport needs to be translated to see the correct
+   * area of the canvas.
+   *
+   * To explain the inverse calculation, first understant that:
+   *
+   * - When we want to look to the right, we need to slide everything to the left.
+   * - When we want to look to the left, we need to slide everything to the right.
+   */
   const viewportOffset = computed(() => {
-    if (!centrePos.value || !state.viewportPos) {
+    if (!centreOffset.value || !state.viewportPos) {
       return {
         x: 0,
         y: 0,
@@ -49,8 +62,8 @@ export const useCanvasStore = defineStore("canvas", () => {
     }
 
     return {
-      x: state.viewportPos.x - centrePos.value.x,
-      y: state.viewportPos.y - centrePos.value.y,
+      x: -(state.viewportPos.x + centreOffset.value.x),
+      y: -(state.viewportPos.y + centreOffset.value.y),
     }
   })
 
@@ -71,7 +84,7 @@ export const useCanvasStore = defineStore("canvas", () => {
   })
 
   const getters = {
-    centrePos,
+    centreOffset,
     viewportOffset,
     zoomScale,
     siteHeaderHeight,

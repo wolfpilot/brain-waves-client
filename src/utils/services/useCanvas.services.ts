@@ -19,11 +19,9 @@ const useCanvas = () => {
 
   // Helpers
   const _centre = () => {
-    if (!canvasStore.centrePos) return
-
     canvasStore.setViewportPos({
-      x: canvasStore.centrePos.x,
-      y: canvasStore.centrePos.y,
+      x: 0,
+      y: 0,
     })
   }
 

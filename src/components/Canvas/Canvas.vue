@@ -25,7 +25,7 @@ const canvasStore = useCanvasStore()
 const ioStore = useIoStore()
 const canvasService = useCanvas()
 
-const { viewportPos } = storeToRefs(canvasStore)
+const { viewportOffset } = storeToRefs(canvasStore)
 const { windowSize, mousePos, wheelOffsetY } = storeToRefs(ioStore)
 
 const gridRef = ref<HTMLDivElement | null>(null)
@@ -72,39 +72,35 @@ const panViewport = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   const dX = mousePos.x - prevMousePos.x
   const dY = mousePos.y - prevMousePos.y
 
-  const newX = canvasStore.viewportPos.x + dX
-  const newY = canvasStore.viewportPos.y + dY
+  const newX = canvasStore.viewportPos.x - dX
+  const newY = canvasStore.viewportPos.y - dY
+
+  const boundsX = (canvasStore.gridSize.width - canvasStore.canvasSize.width) / 2
+  const boundsY = (canvasStore.gridSize.height - canvasStore.canvasSize.height) / 2
 
   const finalX =
     // Check if the viewport is smaller than the window
     canvasStore.gridSize.width < window.innerWidth
-      ? canvasStore.canvasSize.width / 2 - canvasStore.gridSize.width / 2
+      ? 0
       : // or if outside left bounds
-        newX > 0
-        ? 0
+        newX < -boundsX
+        ? -boundsX
         : // or outside right bounds
-          newX < window.innerWidth - canvasStore.gridSize.width
-          ? window.innerWidth - canvasStore.gridSize.width
+          newX > boundsX
+          ? boundsX
           : // else assign the newly calculated coords
             newX
 
   const finalY =
     // Check if the viewport is smaller than the window
     canvasStore.gridSize.height < window.innerHeight
-      ? canvasStore.canvasSize.height / 2 - canvasStore.gridSize.height / 2
+      ? 0
       : // or if outside top bounds
-        newY > 0
-        ? 0
+        newY < -boundsY
+        ? -boundsY
         : // or outside bottom bounds
-          newY <
-            window.innerHeight -
-              canvasStore.siteHeaderHeight -
-              canvasStore.siteFooterHeight -
-              canvasStore.gridSize.height
-          ? window.innerHeight -
-            canvasStore.siteHeaderHeight -
-            canvasStore.siteFooterHeight -
-            canvasStore.gridSize.height
+          newY > boundsY
+          ? boundsY
           : // else assign the newly calculated coords
             newY
 
@@ -144,8 +140,10 @@ const onWindowSizeChange = () => {
   updateGridSize()
 }
 
-const onViewportPosChange = (state: CanvasStore["viewportPos"]) => {
-  if (!state || !gridRef.value) return
+const onViewportOffsetChange = (state: CanvasStore["viewportOffset"]) => {
+  if (!state || !gridRef.value || !canvasStore.gridSize) return
+
+  if (!canvasStore.centreOffset) return
 
   gridRef.value.style.transform = `translate(${state.x}px, ${state.y}px)`
 }
@@ -172,8 +170,8 @@ const onWheelOffsetYChange = (
 
 watch(windowSize, onWindowSizeChange)
 watch(mousePos, onMousePosChange)
+watch(viewportOffset, onViewportOffsetChange)
 watch(wheelOffsetY, onWheelOffsetYChange)
-watch(viewportPos, onViewportPosChange)
 </script>
 
 <template>
@@ -197,13 +195,13 @@ watch(viewportPos, onViewportPosChange)
 .grid {
   position: absolute;
   z-index: -1;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: var(--canvas-grid-width);
   height: var(--canvas-grid-height);
   background: var(--p-cross);
   background-size: var(--canvas-grid-tile-size-px) var(--canvas-grid-tile-size-px);
   border: 5px solid var(--c-accent-2);
-  transform-origin: top left;
 }
 </style>
