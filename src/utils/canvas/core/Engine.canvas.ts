@@ -41,11 +41,20 @@ class EngineImpl implements Engine {
   }
 
   #pan = () => {
-    if (!this.#canvasStore.ctx || !this.#canvasStore.viewportOffset) return
+    if (!this.#canvasStore.ctx || !this.#canvasStore.viewportPos) return
 
     this.#canvasStore.ctx.translate(
-      this.#canvasStore.viewportOffset.x,
-      this.#canvasStore.viewportOffset.y,
+      -this.#canvasStore.viewportPos.x,
+      -this.#canvasStore.viewportPos.y,
+    )
+  }
+
+  #centre = () => {
+    if (!this.#canvasStore.ctx || !this.#canvasStore.canvasSize) return
+
+    this.#canvasStore.ctx.translate(
+      this.#canvasStore.canvasSize.width / 2,
+      this.#canvasStore.canvasSize.height / 2,
     )
   }
 
@@ -57,6 +66,7 @@ class EngineImpl implements Engine {
     this.#canvasStore.ctx.save()
 
     // Apply transforms
+    this.#centre()
     this.#pan()
     this.#scale()
     this.#engineStore.nodes.forEach((node) => node.draw())

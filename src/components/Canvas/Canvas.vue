@@ -175,8 +175,8 @@ const onZoomScaleChange = (state: CanvasStore["zoomScale"]) => {
   if (!canvasStore.cssVars) return
 
   const newGridTileSize = Math.round(state * canvasConfig.grid.tileSize)
-  const newGridWidth = Math.round(state * canvasConfig.grid.maxWidth)
-  const newGridHeight = Math.round(state * canvasConfig.grid.maxHeight)
+  const newGridWidth = Math.round(state * canvasConfig.grid.width)
+  const newGridHeight = Math.round(state * canvasConfig.grid.height)
 
   // Bundle Map updates
   const newCssVars = new Map([...canvasStore.cssVars])
