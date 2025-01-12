@@ -11,52 +11,10 @@ import { useCanvasStore } from "@stores/canvas.stores"
 
 // Utils
 import { useEngine } from "@utils/services"
-import { setCssVar } from "@utils/helpers/dom.helpers"
 
 const useCanvas = () => {
   const canvasStore = useCanvasStore()
   const engineService = useEngine()
-
-  // Helpers
-  const _centre = () => {
-    canvasStore.setViewportPos({
-      x: 0,
-      y: 0,
-    })
-  }
-
-  const _zoom = (level: number) => {
-    if (!canvasStore.cssVars) return
-
-    /**
-     * NOTE: It's important to first update the zoomLevel
-     * based on which the scale will then be computed.
-     */
-    canvasStore.setZoomLevel(level)
-
-    const newGridTileSize = Math.round(canvasStore.zoomScale * canvasConfig.grid.tileSize)
-    const newGridWidth = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxWidth)
-    const newGridHeight = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxHeight)
-
-    // Bundle Map updates
-    const newCssVars = new Map([...canvasStore.cssVars])
-
-    newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
-    newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
-    newCssVars.set("--canvas-grid-height", `${newGridHeight}px`)
-
-    // Update CSS vars
-    setCssVar("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
-    setCssVar("--canvas-grid-width", `${newGridWidth}px`)
-    setCssVar("--canvas-grid-height", `${newGridHeight}px`)
-
-    // Update store
-    canvasStore.setCssVars(newCssVars)
-    canvasStore.setGridSize({
-      width: newGridWidth,
-      height: newGridHeight,
-    })
-  }
 
   // API
   const doSelect = () => {
@@ -82,18 +40,21 @@ const useCanvas = () => {
   const doZoomIn = () => {
     const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
 
-    _zoom(newLevel)
+    canvasStore.setZoomLevel(newLevel)
   }
 
   const doZoomOut = () => {
     const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
 
-    _zoom(newLevel)
+    canvasStore.setZoomLevel(newLevel)
   }
 
   const doReset = () => {
-    _zoom(canvasConfig.zoom.default)
-    _centre()
+    canvasStore.setZoomLevel(canvasConfig.zoom.default)
+    canvasStore.setViewportPos({
+      x: 0,
+      y: 0,
+    })
   }
 
   return {

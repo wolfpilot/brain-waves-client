@@ -5,6 +5,9 @@ import { storeToRefs } from "pinia"
 // Types
 import { type Coords } from "@ts/math.types"
 
+// Configs
+import { config as canvasConfig } from "@configs/canvas.config"
+
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 import { type IoStore, useIoStore } from "@stores/io.stores"
@@ -14,7 +17,7 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { useCanvas } from "@utils/services"
-import { getCssVars } from "@utils/helpers/dom.helpers"
+import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
 import Engine from "@utils/canvas/core/Engine.canvas"
 import { IoManager } from "@utils/managers"
 
@@ -25,7 +28,7 @@ const canvasStore = useCanvasStore()
 const ioStore = useIoStore()
 const canvasService = useCanvas()
 
-const { viewportOffset } = storeToRefs(canvasStore)
+const { viewportOffset, zoomScale } = storeToRefs(canvasStore)
 const { windowSize, mousePos, wheelOffsetY } = storeToRefs(ioStore)
 
 const gridRef = ref<HTMLDivElement | null>(null)
@@ -168,10 +171,38 @@ const onWheelOffsetYChange = (
   return state - prevState < 0 ? canvasService.doZoomIn() : canvasService.doZoomOut()
 }
 
+const onZoomScaleChange = (state: CanvasStore["zoomScale"]) => {
+  if (!canvasStore.cssVars) return
+
+  const newGridTileSize = Math.round(state * canvasConfig.grid.tileSize)
+  const newGridWidth = Math.round(state * canvasConfig.grid.maxWidth)
+  const newGridHeight = Math.round(state * canvasConfig.grid.maxHeight)
+
+  // Bundle Map updates
+  const newCssVars = new Map([...canvasStore.cssVars])
+
+  newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
+  newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
+  newCssVars.set("--canvas-grid-height", `${newGridHeight}px`)
+
+  // Update CSS vars
+  setCssVar("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
+  setCssVar("--canvas-grid-width", `${newGridWidth}px`)
+  setCssVar("--canvas-grid-height", `${newGridHeight}px`)
+
+  // Update store
+  canvasStore.setCssVars(newCssVars)
+  canvasStore.setGridSize({
+    width: newGridWidth,
+    height: newGridHeight,
+  })
+}
+
 watch(windowSize, onWindowSizeChange)
 watch(mousePos, onMousePosChange)
 watch(viewportOffset, onViewportOffsetChange)
 watch(wheelOffsetY, onWheelOffsetYChange)
+watch(zoomScale, onZoomScaleChange)
 </script>
 
 <template>
