@@ -65,14 +65,14 @@ class CanvasNodeImpl implements CanvasNode {
     switch (this.type) {
       case "rectangle":
         this.pos = {
-          x: dX - defaults.rectangle.width / 2,
-          y: dY - defaults.rectangle.height / 2,
+          x: Math.round(dX - defaults.rectangle.width / 2),
+          y: Math.round(dY - defaults.rectangle.height / 2),
         }
         break
       case "circle":
         this.pos = {
-          x: dX,
-          y: dY,
+          x: Math.round(dX),
+          y: Math.round(dY),
         }
         break
       default:
