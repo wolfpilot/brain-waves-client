@@ -49,6 +49,12 @@
   --c-page-background: hsl(246.45 11.25% 10.75%);
   --c-page-foreground: hsl(248, 71%, 96%);
 
+  /* Debugging */
+  --c-debug-canvas-surface: #1900ff1a;
+  --c-debug-canvas-corner: #ff0000;
+  --c-debug-canvas-crosshair: #ffffff;
+  --c-debug-canvas-centre: #00ff00;
+
   /* Gradients */
   --g-diag-accent: linear-gradient(
     45deg,

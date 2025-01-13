@@ -8,6 +8,9 @@ import { type IoStore, useIoStore } from "@stores/io.stores"
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 
+// Canvas
+import { Debugger } from "@utils/canvas/gui"
+
 export interface Engine {
   init: () => void
 }
@@ -16,11 +19,14 @@ class EngineImpl implements Engine {
   #engineStore: EngineStore
   #canvasStore: CanvasStore
   #ioStore: IoStore
+  #debugger: Debugger
 
   constructor() {
     this.#engineStore = useEngineStore()
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
+
+    this.#debugger = new Debugger()
   }
 
   #clear = () => {
@@ -69,6 +75,9 @@ class EngineImpl implements Engine {
     this.#centre()
     this.#pan()
     this.#scale()
+
+    this.#debugger.draw()
+
     this.#engineStore.nodes.forEach((node) => node.draw())
 
     this.#canvasStore.ctx.restore()
@@ -116,6 +125,8 @@ class EngineImpl implements Engine {
   }
 
   public init = () => {
+    this.#debugger.init()
+
     this.#render()
 
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)

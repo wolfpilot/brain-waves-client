@@ -1,4 +1,10 @@
 export const config = {
+  debug: {
+    surface: false,
+    corner: false,
+    crosshair: false,
+    centre: false,
+  },
   grid: {
     width: 4000,
     height: 2000,
