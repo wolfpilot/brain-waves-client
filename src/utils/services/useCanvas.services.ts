@@ -7,14 +7,41 @@ import { config as canvasConfig } from "@configs/canvas.config"
 import { TOOLBAR_TOOLS } from "@constants/toolbar.constants"
 
 // Stores
-import { useCanvasStore } from "@stores/canvas.stores"
+import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
+import { useIoStore } from "@stores/io.stores"
 
 // Utils
 import { useEngine } from "@utils/services"
 
 const useCanvas = () => {
   const canvasStore = useCanvasStore()
+  const ioStore = useIoStore()
   const engineService = useEngine()
+
+  // Helpers
+  const zoomTo = (
+    scaleFactor: number,
+    level: CanvasStore["zoomLevel"],
+    scale: CanvasStore["zoomScale"],
+  ) => {
+    if (!canvasStore.viewportPos || !ioStore.mousePosOffset) return
+
+    const dX = canvasStore.viewportPos.x + ioStore.mousePosOffset.x * (scaleFactor - 1)
+    const dY = canvasStore.viewportPos.y + ioStore.mousePosOffset.y * (scaleFactor - 1)
+
+    canvasStore.setViewportPos({
+      x: -dX,
+      y: -dY,
+    })
+
+    canvasStore.setZoomLevel(level)
+    canvasStore.setZoomScale(scale)
+
+    canvasStore.setViewportPos({
+      x: dX,
+      y: dY,
+    })
+  }
 
   // API
   const doSelect = () => {
@@ -38,19 +65,28 @@ const useCanvas = () => {
   }
 
   const doZoomIn = () => {
-    const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
+    if (canvasStore.zoomLevel >= canvasConfig.zoom.max) return
 
-    canvasStore.setZoomLevel(newLevel)
+    const newScaleFactor = canvasConfig.zoom.factor
+    const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
+    const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
+
+    zoomTo(newScaleFactor, newLevel, newScale)
   }
 
   const doZoomOut = () => {
-    const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
+    if (canvasStore.zoomLevel <= canvasConfig.zoom.min) return
 
-    canvasStore.setZoomLevel(newLevel)
+    const newScaleFactor = 1 / canvasConfig.zoom.factor
+    const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
+    const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
+
+    zoomTo(newScaleFactor, newLevel, newScale)
   }
 
   const doReset = () => {
-    canvasStore.setZoomLevel(canvasConfig.zoom.default)
+    canvasStore.setZoomLevel(canvasConfig.zoom.level)
+    canvasStore.setZoomScale(canvasConfig.zoom.factor)
     canvasStore.setViewportPos({
       x: 0,
       y: 0,

@@ -11,9 +11,9 @@ export const config = {
     tileSize: 60,
   },
   zoom: {
-    default: 0,
-    max: 5,
-    min: -5,
-    stepSize: 0.1,
+    level: 0,
+    max: 10,
+    min: -10,
+    factor: 1.1,
   },
 }

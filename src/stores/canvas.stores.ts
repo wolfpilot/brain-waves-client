@@ -24,13 +24,12 @@ export const useCanvasStore = defineStore("canvas", () => {
     canvasSize: <Dimensions | null>null,
     gridSize: <Dimensions | null>null,
     viewportPos: <Coords | null>null,
-    zoomLevel: <number>canvasConfig.zoom.default,
+    zoomLevel: <number>canvasConfig.zoom.level,
+    zoomScale: <number>canvasConfig.zoom.factor,
     activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
   })
 
   // Getters
-  const zoomScale = computed(() => 1 + state.zoomLevel / 10)
-
   /**
    * The amount the centre has to be translated to make it relative
    * to the middle of the grid, rather than top-left.
@@ -86,7 +85,6 @@ export const useCanvasStore = defineStore("canvas", () => {
   const getters = {
     centreOffset,
     viewportOffset,
-    zoomScale,
     siteHeaderHeight,
     siteFooterHeight,
   }
@@ -112,6 +110,9 @@ export const useCanvasStore = defineStore("canvas", () => {
     },
     setZoomLevel(val: number) {
       state.zoomLevel = val
+    },
+    setZoomScale(val: number) {
+      state.zoomScale = val
     },
     resetActiveTool() {
       state.activeTool = TOOLBAR_TOOLS.select

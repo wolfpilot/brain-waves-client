@@ -62,21 +62,9 @@ class CanvasNodeImpl implements CanvasNode {
     const dX = this.#ioStore.mousePosOffset.x / this.#canvasStore.zoomScale
     const dY = this.#ioStore.mousePosOffset.y / this.#canvasStore.zoomScale
 
-    switch (this.type) {
-      case "rectangle":
-        this.pos = {
-          x: Math.round(dX - defaults.rectangle.width / 2),
-          y: Math.round(dY - defaults.rectangle.height / 2),
-        }
-        break
-      case "circle":
-        this.pos = {
-          x: Math.round(dX),
-          y: Math.round(dY),
-        }
-        break
-      default:
-        assertExhaustiveGuard(this.type)
+    this.pos = {
+      x: Math.round(dX),
+      y: Math.round(dY),
     }
   }
 
@@ -89,8 +77,8 @@ class CanvasNodeImpl implements CanvasNode {
     this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.roundRect(
-      this.pos.x,
-      this.pos.y,
+      this.pos.x - defaults.rectangle.width / 2,
+      this.pos.y - defaults.rectangle.height / 2,
       defaults.rectangle.width,
       defaults.rectangle.height,
       [this.borderRadius],
