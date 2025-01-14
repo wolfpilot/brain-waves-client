@@ -55,32 +55,16 @@ class CanvasNodeImpl implements CanvasNode {
   }
 
   #updatePosition = () => {
-    if (!this.#ioStore.mousePosOffset || !this.#canvasStore.viewportOffset) {
+    if (!this.#ioStore.mousePosOffset) {
       return
     }
 
-    const dX =
-      (this.#ioStore.mousePosOffset.x - this.#canvasStore.viewportOffset.x) /
-      this.#canvasStore.zoomScale
-    const dY =
-      (this.#ioStore.mousePosOffset.y - this.#canvasStore.viewportOffset.y) /
-      this.#canvasStore.zoomScale
+    const dX = this.#ioStore.mousePosOffset.x / this.#canvasStore.zoomScale
+    const dY = this.#ioStore.mousePosOffset.y / this.#canvasStore.zoomScale
 
-    switch (this.type) {
-      case "rectangle":
-        this.pos = {
-          x: dX - defaults.rectangle.width / 2,
-          y: dY - defaults.rectangle.height / 2,
-        }
-        break
-      case "circle":
-        this.pos = {
-          x: dX,
-          y: dY,
-        }
-        break
-      default:
-        assertExhaustiveGuard(this.type)
+    this.pos = {
+      x: Math.round(dX),
+      y: Math.round(dY),
     }
   }
 
@@ -93,8 +77,8 @@ class CanvasNodeImpl implements CanvasNode {
     this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.roundRect(
-      this.pos.x,
-      this.pos.y,
+      this.pos.x - defaults.rectangle.width / 2,
+      this.pos.y - defaults.rectangle.height / 2,
       defaults.rectangle.width,
       defaults.rectangle.height,
       [this.borderRadius],

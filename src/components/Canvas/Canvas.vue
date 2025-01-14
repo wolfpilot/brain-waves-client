@@ -5,6 +5,9 @@ import { storeToRefs } from "pinia"
 // Types
 import { type Coords } from "@ts/math.types"
 
+// Configs
+import { config as canvasConfig } from "@configs/canvas.config"
+
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 import { type IoStore, useIoStore } from "@stores/io.stores"
@@ -14,7 +17,7 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 
 // Utils
 import { useCanvas } from "@utils/services"
-import { getCssVars } from "@utils/helpers/dom.helpers"
+import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
 import Engine from "@utils/canvas/core/Engine.canvas"
 import { IoManager } from "@utils/managers"
 
@@ -25,7 +28,7 @@ const canvasStore = useCanvasStore()
 const ioStore = useIoStore()
 const canvasService = useCanvas()
 
-const { viewportPos } = storeToRefs(canvasStore)
+const { viewportOffset, zoomScale } = storeToRefs(canvasStore)
 const { windowSize, mousePos, wheelOffsetY } = storeToRefs(ioStore)
 
 const gridRef = ref<HTMLDivElement | null>(null)
@@ -72,39 +75,35 @@ const panViewport = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   const dX = mousePos.x - prevMousePos.x
   const dY = mousePos.y - prevMousePos.y
 
-  const newX = canvasStore.viewportPos.x + dX
-  const newY = canvasStore.viewportPos.y + dY
+  const newX = canvasStore.viewportPos.x - dX
+  const newY = canvasStore.viewportPos.y - dY
+
+  const boundsX = (canvasStore.gridSize.width - canvasStore.canvasSize.width) / 2
+  const boundsY = (canvasStore.gridSize.height - canvasStore.canvasSize.height) / 2
 
   const finalX =
     // Check if the viewport is smaller than the window
     canvasStore.gridSize.width < window.innerWidth
-      ? canvasStore.canvasSize.width / 2 - canvasStore.gridSize.width / 2
+      ? 0
       : // or if outside left bounds
-        newX > 0
-        ? 0
+        newX < -boundsX
+        ? -boundsX
         : // or outside right bounds
-          newX < window.innerWidth - canvasStore.gridSize.width
-          ? window.innerWidth - canvasStore.gridSize.width
+          newX > boundsX
+          ? boundsX
           : // else assign the newly calculated coords
             newX
 
   const finalY =
     // Check if the viewport is smaller than the window
     canvasStore.gridSize.height < window.innerHeight
-      ? canvasStore.canvasSize.height / 2 - canvasStore.gridSize.height / 2
+      ? 0
       : // or if outside top bounds
-        newY > 0
-        ? 0
+        newY < -boundsY
+        ? -boundsY
         : // or outside bottom bounds
-          newY <
-            window.innerHeight -
-              canvasStore.siteHeaderHeight -
-              canvasStore.siteFooterHeight -
-              canvasStore.gridSize.height
-          ? window.innerHeight -
-            canvasStore.siteHeaderHeight -
-            canvasStore.siteFooterHeight -
-            canvasStore.gridSize.height
+          newY > boundsY
+          ? boundsY
           : // else assign the newly calculated coords
             newY
 
@@ -144,8 +143,10 @@ const onWindowSizeChange = () => {
   updateGridSize()
 }
 
-const onViewportPosChange = (state: CanvasStore["viewportPos"]) => {
-  if (!state || !gridRef.value) return
+const onViewportOffsetChange = (state: CanvasStore["viewportOffset"]) => {
+  if (!state || !gridRef.value || !canvasStore.gridSize) return
+
+  if (!canvasStore.centreOffset) return
 
   gridRef.value.style.transform = `translate(${state.x}px, ${state.y}px)`
 }
@@ -170,10 +171,38 @@ const onWheelOffsetYChange = (
   return state - prevState < 0 ? canvasService.doZoomIn() : canvasService.doZoomOut()
 }
 
+const onZoomScaleChange = (state: CanvasStore["zoomScale"]) => {
+  if (!canvasStore.cssVars) return
+
+  const newGridTileSize = Math.round(state * canvasConfig.grid.tileSize)
+  const newGridWidth = Math.round(state * canvasConfig.grid.width)
+  const newGridHeight = Math.round(state * canvasConfig.grid.height)
+
+  // Bundle Map updates
+  const newCssVars = new Map([...canvasStore.cssVars])
+
+  newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
+  newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
+  newCssVars.set("--canvas-grid-height", `${newGridHeight}px`)
+
+  // Update CSS vars
+  setCssVar("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
+  setCssVar("--canvas-grid-width", `${newGridWidth}px`)
+  setCssVar("--canvas-grid-height", `${newGridHeight}px`)
+
+  // Update store
+  canvasStore.setCssVars(newCssVars)
+  canvasStore.setGridSize({
+    width: newGridWidth,
+    height: newGridHeight,
+  })
+}
+
 watch(windowSize, onWindowSizeChange)
 watch(mousePos, onMousePosChange)
+watch(viewportOffset, onViewportOffsetChange)
 watch(wheelOffsetY, onWheelOffsetYChange)
-watch(viewportPos, onViewportPosChange)
+watch(zoomScale, onZoomScaleChange)
 </script>
 
 <template>
@@ -197,13 +226,13 @@ watch(viewportPos, onViewportPosChange)
 .grid {
   position: absolute;
   z-index: -1;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: var(--canvas-grid-width);
   height: var(--canvas-grid-height);
   background: var(--p-cross);
   background-size: var(--canvas-grid-tile-size-px) var(--canvas-grid-tile-size-px);
   border: 5px solid var(--c-accent-2);
-  transform-origin: top left;
 }
 </style>

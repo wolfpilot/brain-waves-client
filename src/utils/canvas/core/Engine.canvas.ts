@@ -8,6 +8,9 @@ import { type IoStore, useIoStore } from "@stores/io.stores"
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 
+// Canvas
+import { Debugger } from "@utils/canvas/gui"
+
 export interface Engine {
   init: () => void
 }
@@ -16,11 +19,14 @@ class EngineImpl implements Engine {
   #engineStore: EngineStore
   #canvasStore: CanvasStore
   #ioStore: IoStore
+  #debugger: Debugger
 
   constructor() {
     this.#engineStore = useEngineStore()
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
+
+    this.#debugger = new Debugger()
   }
 
   #clear = () => {
@@ -41,11 +47,20 @@ class EngineImpl implements Engine {
   }
 
   #pan = () => {
-    if (!this.#canvasStore.ctx || !this.#canvasStore.viewportOffset) return
+    if (!this.#canvasStore.ctx || !this.#canvasStore.viewportPos) return
 
     this.#canvasStore.ctx.translate(
-      this.#canvasStore.viewportOffset.x,
-      this.#canvasStore.viewportOffset.y,
+      -this.#canvasStore.viewportPos.x,
+      -this.#canvasStore.viewportPos.y,
+    )
+  }
+
+  #centre = () => {
+    if (!this.#canvasStore.ctx || !this.#canvasStore.canvasSize) return
+
+    this.#canvasStore.ctx.translate(
+      this.#canvasStore.canvasSize.width / 2,
+      this.#canvasStore.canvasSize.height / 2,
     )
   }
 
@@ -57,8 +72,12 @@ class EngineImpl implements Engine {
     this.#canvasStore.ctx.save()
 
     // Apply transforms
+    this.#centre()
     this.#pan()
     this.#scale()
+
+    this.#debugger.draw()
+
     this.#engineStore.nodes.forEach((node) => node.draw())
 
     this.#canvasStore.ctx.restore()
@@ -106,6 +125,8 @@ class EngineImpl implements Engine {
   }
 
   public init = () => {
+    this.#debugger.init()
+
     this.#render()
 
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)

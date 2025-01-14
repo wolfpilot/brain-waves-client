@@ -7,56 +7,39 @@ import { config as canvasConfig } from "@configs/canvas.config"
 import { TOOLBAR_TOOLS } from "@constants/toolbar.constants"
 
 // Stores
-import { useCanvasStore } from "@stores/canvas.stores"
+import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
+import { useIoStore } from "@stores/io.stores"
 
 // Utils
 import { useEngine } from "@utils/services"
-import { setCssVar } from "@utils/helpers/dom.helpers"
 
 const useCanvas = () => {
   const canvasStore = useCanvasStore()
+  const ioStore = useIoStore()
   const engineService = useEngine()
 
   // Helpers
-  const _centre = () => {
-    if (!canvasStore.centrePos) return
+  const zoomTo = (
+    scaleFactor: number,
+    level: CanvasStore["zoomLevel"],
+    scale: CanvasStore["zoomScale"],
+  ) => {
+    if (!canvasStore.viewportPos || !ioStore.mousePosOffset) return
+
+    const dX = canvasStore.viewportPos.x + ioStore.mousePosOffset.x * (scaleFactor - 1)
+    const dY = canvasStore.viewportPos.y + ioStore.mousePosOffset.y * (scaleFactor - 1)
 
     canvasStore.setViewportPos({
-      x: canvasStore.centrePos.x,
-      y: canvasStore.centrePos.y,
+      x: -dX,
+      y: -dY,
     })
-  }
 
-  const _zoom = (level: number) => {
-    if (!canvasStore.cssVars) return
-
-    /**
-     * NOTE: It's important to first update the zoomLevel
-     * based on which the scale will then be computed.
-     */
     canvasStore.setZoomLevel(level)
+    canvasStore.setZoomScale(scale)
 
-    const newGridTileSize = Math.round(canvasStore.zoomScale * canvasConfig.grid.tileSize)
-    const newGridWidth = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxWidth)
-    const newGridHeight = Math.round(canvasStore.zoomScale * canvasConfig.grid.maxHeight)
-
-    // Bundle Map updates
-    const newCssVars = new Map([...canvasStore.cssVars])
-
-    newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
-    newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
-    newCssVars.set("--canvas-grid-height", `${newGridHeight}px`)
-
-    // Update CSS vars
-    setCssVar("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
-    setCssVar("--canvas-grid-width", `${newGridWidth}px`)
-    setCssVar("--canvas-grid-height", `${newGridHeight}px`)
-
-    // Update store
-    canvasStore.setCssVars(newCssVars)
-    canvasStore.setGridSize({
-      width: newGridWidth,
-      height: newGridHeight,
+    canvasStore.setViewportPos({
+      x: dX,
+      y: dY,
     })
   }
 
@@ -82,20 +65,32 @@ const useCanvas = () => {
   }
 
   const doZoomIn = () => {
-    const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
+    if (canvasStore.zoomLevel >= canvasConfig.zoom.max) return
 
-    _zoom(newLevel)
+    const newScaleFactor = canvasConfig.zoom.factor
+    const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
+    const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
+
+    zoomTo(newScaleFactor, newLevel, newScale)
   }
 
   const doZoomOut = () => {
-    const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
+    if (canvasStore.zoomLevel <= canvasConfig.zoom.min) return
 
-    _zoom(newLevel)
+    const newScaleFactor = 1 / canvasConfig.zoom.factor
+    const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
+    const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
+
+    zoomTo(newScaleFactor, newLevel, newScale)
   }
 
   const doReset = () => {
-    _zoom(canvasConfig.zoom.default)
-    _centre()
+    canvasStore.setZoomLevel(canvasConfig.zoom.level)
+    canvasStore.setZoomScale(canvasConfig.zoom.factor)
+    canvasStore.setViewportPos({
+      x: 0,
+      y: 0,
+    })
   }
 
   return {

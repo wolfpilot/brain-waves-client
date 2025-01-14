@@ -24,12 +24,26 @@ export const useIoStore = defineStore("io", () => {
   })
 
   const getters = {
+    /**
+     * Translate mouse to Cartesian system coordinates
+     */
     mousePosOffset: computed(() => {
-      if (!state.mousePos || !canvasStore.siteHeaderHeight) return null
+      if (
+        !state.mousePos ||
+        !canvasStore.siteHeaderHeight ||
+        !canvasStore.canvasSize ||
+        !canvasStore.viewportPos
+      ) {
+        return null
+      }
 
       return {
-        x: state.mousePos.x,
-        y: state.mousePos.y - canvasStore.siteHeaderHeight,
+        x: state.mousePos.x - canvasStore.canvasSize.width / 2 + canvasStore.viewportPos.x,
+        y:
+          state.mousePos.y -
+          canvasStore.canvasSize.height / 2 +
+          canvasStore.viewportPos.y -
+          canvasStore.siteHeaderHeight,
       }
     }),
   }
