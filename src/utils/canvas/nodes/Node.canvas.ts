@@ -5,6 +5,9 @@ import { type IoStore, useIoStore } from "@stores/io.stores"
 // Types
 import type { Coords } from "@ts/math.types"
 
+// Configs
+import { config } from "@configs/canvas.config"
+
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 
@@ -21,17 +24,6 @@ export interface CanvasNode {
   draw: () => void
   scale: () => void
   place: () => void
-}
-
-// Setup
-const defaults = {
-  rectangle: {
-    width: 250,
-    height: 150,
-  },
-  circle: {
-    radius: 125,
-  },
 }
 
 class CanvasNodeImpl implements CanvasNode {
@@ -152,10 +144,10 @@ class CanvasNodeImpl implements CanvasNode {
     this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.roundRect(
-      this.pos.x - defaults.rectangle.width / 2,
-      this.pos.y - defaults.rectangle.height / 2,
-      defaults.rectangle.width,
-      defaults.rectangle.height,
+      this.pos.x - config.nodes.rectangle.width / 2,
+      this.pos.y - config.nodes.rectangle.height / 2,
+      config.nodes.rectangle.width,
+      config.nodes.rectangle.height,
       [this.borderRadius],
     )
     this.#canvasStore.ctx.fill()
@@ -170,7 +162,7 @@ class CanvasNodeImpl implements CanvasNode {
     this.#canvasStore.ctx.fillStyle = this.fillColor
     this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
-    this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, defaults.circle.radius, 0, 2 * Math.PI)
+    this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, config.nodes.circle.radius, 0, 2 * Math.PI)
     this.#canvasStore.ctx.fill()
     this.#canvasStore.ctx.stroke()
   }
@@ -209,15 +201,15 @@ class CanvasNodeImpl implements CanvasNode {
   public scale = () => {
     this.width =
       this.type === "rectangle"
-        ? +(defaults.rectangle.width * this.#canvasStore.zoomScale).toPrecision(3)
+        ? +(config.nodes.rectangle.width * this.#canvasStore.zoomScale).toPrecision(3)
         : null
     this.height =
       this.type === "rectangle"
-        ? +(defaults.rectangle.height * this.#canvasStore.zoomScale).toPrecision(3)
+        ? +(config.nodes.rectangle.height * this.#canvasStore.zoomScale).toPrecision(3)
         : null
     this.radius =
       this.type === "circle"
-        ? +(defaults.circle.radius * this.#canvasStore.zoomScale).toPrecision(3)
+        ? +(config.nodes.circle.radius * this.#canvasStore.zoomScale).toPrecision(3)
         : null
   }
 

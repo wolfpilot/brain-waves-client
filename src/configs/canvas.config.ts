@@ -17,4 +17,13 @@ export const config = {
     min: -10,
     factor: 1.1,
   },
+  nodes: {
+    rectangle: {
+      width: 250,
+      height: 150,
+    },
+    circle: {
+      radius: 125,
+    },
+  },
 }
