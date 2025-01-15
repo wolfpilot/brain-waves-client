@@ -86,7 +86,7 @@ const useCanvas = () => {
 
   const doReset = () => {
     canvasStore.setZoomLevel(canvasConfig.zoom.level)
-    canvasStore.setZoomScale(canvasConfig.zoom.factor)
+    canvasStore.setZoomScale(canvasConfig.zoom.scale)
     canvasStore.setViewportPos({
       x: 0,
       y: 0,
