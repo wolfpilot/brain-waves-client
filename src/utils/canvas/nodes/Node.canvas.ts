@@ -19,6 +19,7 @@ export interface Props {
 export interface CanvasNode {
   init: () => void
   draw: () => void
+  scale: () => void
   place: () => void
 }
 
@@ -40,6 +41,9 @@ class CanvasNodeImpl implements CanvasNode {
   fillColor: string | null
   borderColor: string | null
   borderRadius: number | null
+  width: number | null
+  height: number | null
+  radius: number | null
   #canvasStore: CanvasStore
   #ioStore: IoStore
 
@@ -50,21 +54,92 @@ class CanvasNodeImpl implements CanvasNode {
     this.fillColor = null
     this.borderColor = null
     this.borderRadius = null
+    this.width = null
+    this.height = null
+    this.radius = null
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
   }
 
-  #updatePosition = () => {
-    if (!this.#ioStore.mousePosOffset) {
+  #updateRectanglePosition = () => {
+    if (
+      !this.width ||
+      !this.height ||
+      !this.#canvasStore.gridSize ||
+      !this.#ioStore.mousePosOffset
+    ) {
       return
     }
 
-    const dX = this.#ioStore.mousePosOffset.x / this.#canvasStore.zoomScale
-    const dY = this.#ioStore.mousePosOffset.y / this.#canvasStore.zoomScale
+    const unscaledX =
+      // Check if outside left bounds
+      this.#ioStore.mousePosOffset.x < (-this.#canvasStore.gridSize.width + this.width) / 2
+        ? (-this.#canvasStore.gridSize.width + this.width) / 2
+        : // or if outside right bounds
+          this.#ioStore.mousePosOffset.x > (this.#canvasStore.gridSize.width - this.width) / 2
+          ? (this.#canvasStore.gridSize.width - this.width) / 2
+          : this.#ioStore.mousePosOffset.x
+
+    const unscaledY =
+      // Check if outside top bounds
+      this.#ioStore.mousePosOffset.y < (-this.#canvasStore.gridSize.height + this.height) / 2
+        ? (-this.#canvasStore.gridSize.height + this.height) / 2
+        : // or if outside bottom bounds
+          this.#ioStore.mousePosOffset.y > (this.#canvasStore.gridSize.height - this.height) / 2
+          ? (this.#canvasStore.gridSize.height - this.height) / 2
+          : this.#ioStore.mousePosOffset.y
+
+    const finalX = Math.round(unscaledX / this.#canvasStore.zoomScale)
+    const finalY = Math.round(unscaledY / this.#canvasStore.zoomScale)
 
     this.pos = {
-      x: Math.round(dX),
-      y: Math.round(dY),
+      x: finalX,
+      y: finalY,
+    }
+  }
+
+  #updateCirclePosition = () => {
+    if (!this.radius || !this.#canvasStore.gridSize || !this.#ioStore.mousePosOffset) {
+      return
+    }
+
+    const unscaledX =
+      // Check if outside left bounds
+      this.#ioStore.mousePosOffset.x < -this.#canvasStore.gridSize.width / 2 + this.radius
+        ? -this.#canvasStore.gridSize.width / 2 + this.radius
+        : // or if outside right bounds
+          this.#ioStore.mousePosOffset.x > this.#canvasStore.gridSize.width / 2 - this.radius
+          ? this.#canvasStore.gridSize.width / 2 - this.radius
+          : this.#ioStore.mousePosOffset.x
+
+    const unscaledY =
+      // Check if outside top bounds
+      this.#ioStore.mousePosOffset.y < -this.#canvasStore.gridSize.height / 2 + this.radius
+        ? -this.#canvasStore.gridSize.height / 2 + this.radius
+        : // or if outside bottom bounds
+          this.#ioStore.mousePosOffset.y > this.#canvasStore.gridSize.height / 2 - this.radius
+          ? this.#canvasStore.gridSize.height / 2 - this.radius
+          : this.#ioStore.mousePosOffset.y
+
+    const finalX = Math.round(unscaledX / this.#canvasStore.zoomScale)
+    const finalY = Math.round(unscaledY / this.#canvasStore.zoomScale)
+
+    this.pos = {
+      x: finalX,
+      y: finalY,
+    }
+  }
+
+  #updatePosition = () => {
+    switch (this.type) {
+      case "rectangle":
+        this.#updateRectanglePosition()
+        break
+      case "circle":
+        this.#updateCirclePosition()
+        break
+      default:
+        assertExhaustiveGuard(this.type)
     }
   }
 
@@ -100,7 +175,7 @@ class CanvasNodeImpl implements CanvasNode {
     this.#canvasStore.ctx.stroke()
   }
 
-  #setup() {
+  #setup = () => {
     if (!this.#canvasStore.cssVars) return
 
     const cssFillColor = "transparent"
@@ -112,6 +187,8 @@ class CanvasNodeImpl implements CanvasNode {
     this.fillColor = cssFillColor as string
     this.borderColor = cssBorderColor as string
     this.borderRadius = parseInt(cssBorderRadius as string, 10)
+
+    this.scale()
   }
 
   public place = () => {
@@ -127,6 +204,21 @@ class CanvasNodeImpl implements CanvasNode {
     this.fillColor = newCssFillColor as string
     this.borderColor = newCssBorderColor as string
     this.mode = "static"
+  }
+
+  public scale = () => {
+    this.width =
+      this.type === "rectangle"
+        ? +(defaults.rectangle.width * this.#canvasStore.zoomScale).toPrecision(3)
+        : null
+    this.height =
+      this.type === "rectangle"
+        ? +(defaults.rectangle.height * this.#canvasStore.zoomScale).toPrecision(3)
+        : null
+    this.radius =
+      this.type === "circle"
+        ? +(defaults.circle.radius * this.#canvasStore.zoomScale).toPrecision(3)
+        : null
   }
 
   public draw = () => {

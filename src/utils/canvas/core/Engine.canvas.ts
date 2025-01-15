@@ -44,6 +44,8 @@ class EngineImpl implements Engine {
     if (!this.#canvasStore.ctx) return
 
     this.#canvasStore.ctx.scale(this.#canvasStore.zoomScale, this.#canvasStore.zoomScale)
+
+    this.#engineStore.nodes.forEach((node) => node.scale())
   }
 
   #pan = () => {
