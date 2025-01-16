@@ -2,9 +2,6 @@
 import { ref, onMounted, watch } from "vue"
 import { storeToRefs } from "pinia"
 
-// Types
-import { type Coords } from "@ts/math.types"
-
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
@@ -59,10 +56,8 @@ const updateGridSize = () => {
   })
 }
 
-const panViewport = (mousePos: Coords | null, prevMousePos: Coords | null) => {
+const panViewport = (dX: number, dY: number) => {
   if (
-    !mousePos ||
-    !prevMousePos ||
     !canvasStore.canvasSize ||
     !canvasStore.gridSize ||
     !canvasStore.viewportPos ||
@@ -71,10 +66,6 @@ const panViewport = (mousePos: Coords | null, prevMousePos: Coords | null) => {
   ) {
     return
   }
-
-  const dX = mousePos.x - prevMousePos.x
-  const dY = mousePos.y - prevMousePos.y
-
   const newX = canvasStore.viewportPos.x - dX
   const newY = canvasStore.viewportPos.y - dY
 
@@ -141,6 +132,9 @@ const onWindowSizeChange = () => {
   updateCssVars()
   updateCanvasSize()
   updateGridSize()
+
+  // Force viewport to stay within boundaries
+  panViewport(0, 0)
 }
 
 const onViewportOffsetChange = (state: CanvasStore["viewportOffset"]) => {
@@ -155,9 +149,11 @@ const onMousePosChange = (
   state: CanvasStore["viewportPos"],
   prevState: CanvasStore["viewportPos"],
 ) => {
+  if (!state || !prevState) return
+
   switch (true) {
     case ioStore.activeMouseButtons.get("middle"):
-      panViewport(state, prevState)
+      panViewport(state.x - prevState.x, state.y - prevState.y)
       return
     default:
       return
@@ -196,6 +192,9 @@ const onZoomScaleChange = (state: CanvasStore["zoomScale"]) => {
     width: newGridWidth,
     height: newGridHeight,
   })
+
+  // Force viewport to stay within boundaries
+  panViewport(0, 0)
 }
 
 watch(windowSize, onWindowSizeChange)
