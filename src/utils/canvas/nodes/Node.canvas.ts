@@ -1,22 +1,12 @@
-// Stores
-import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
-import { type IoStore, useIoStore } from "@stores/io.stores"
-
 // Types
-import type { Coords } from "@ts/math.types"
-
-// Configs
-import { config } from "@configs/canvas.config"
+import type { Primitives, PrimitiveType, PrimitiveMode } from "@ts/primitives.types"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
-
-export type NodeType = "rectangle" | "circle"
-export type NodeMode = "preview" | "static"
+import { Rectangle, Circle } from "@utils/canvas/primitives"
 
 export interface Props {
-  type: NodeType
-  pos: Coords
+  type: PrimitiveType
 }
 
 export interface CanvasNode {
@@ -27,213 +17,51 @@ export interface CanvasNode {
 }
 
 class CanvasNodeImpl implements CanvasNode {
-  mode: NodeMode
-  type: NodeType
-  pos: Coords
-  fillColor: string | null
-  borderColor: string | null
-  borderRadius: number | null
-  width: number | null
-  height: number | null
-  radius: number | null
-  #canvasStore: CanvasStore
-  #ioStore: IoStore
+  mode: PrimitiveMode
+  type: PrimitiveType
+  primitive: Primitives | null
 
-  constructor({ type, pos }: Props) {
+  constructor({ type }: Props) {
     this.mode = "preview"
     this.type = type
-    this.pos = pos
-    this.fillColor = null
-    this.borderColor = null
-    this.borderRadius = null
-    this.width = null
-    this.height = null
-    this.radius = null
-    this.#canvasStore = useCanvasStore()
-    this.#ioStore = useIoStore()
-  }
-
-  #updateRectanglePosition = () => {
-    if (
-      !this.width ||
-      !this.height ||
-      !this.#canvasStore.gridSize ||
-      !this.#ioStore.mousePosOffset
-    ) {
-      return
-    }
-
-    const unscaledX =
-      // Check if outside left bounds
-      this.#ioStore.mousePosOffset.x < (-this.#canvasStore.gridSize.width + this.width) / 2
-        ? (-this.#canvasStore.gridSize.width + this.width) / 2
-        : // or if outside right bounds
-          this.#ioStore.mousePosOffset.x > (this.#canvasStore.gridSize.width - this.width) / 2
-          ? (this.#canvasStore.gridSize.width - this.width) / 2
-          : this.#ioStore.mousePosOffset.x
-
-    const unscaledY =
-      // Check if outside top bounds
-      this.#ioStore.mousePosOffset.y < (-this.#canvasStore.gridSize.height + this.height) / 2
-        ? (-this.#canvasStore.gridSize.height + this.height) / 2
-        : // or if outside bottom bounds
-          this.#ioStore.mousePosOffset.y > (this.#canvasStore.gridSize.height - this.height) / 2
-          ? (this.#canvasStore.gridSize.height - this.height) / 2
-          : this.#ioStore.mousePosOffset.y
-
-    const finalX = Math.round(unscaledX / this.#canvasStore.zoomScale)
-    const finalY = Math.round(unscaledY / this.#canvasStore.zoomScale)
-
-    this.pos = {
-      x: finalX,
-      y: finalY,
-    }
-  }
-
-  #updateCirclePosition = () => {
-    if (!this.radius || !this.#canvasStore.gridSize || !this.#ioStore.mousePosOffset) {
-      return
-    }
-
-    const unscaledX =
-      // Check if outside left bounds
-      this.#ioStore.mousePosOffset.x < -this.#canvasStore.gridSize.width / 2 + this.radius
-        ? -this.#canvasStore.gridSize.width / 2 + this.radius
-        : // or if outside right bounds
-          this.#ioStore.mousePosOffset.x > this.#canvasStore.gridSize.width / 2 - this.radius
-          ? this.#canvasStore.gridSize.width / 2 - this.radius
-          : this.#ioStore.mousePosOffset.x
-
-    const unscaledY =
-      // Check if outside top bounds
-      this.#ioStore.mousePosOffset.y < -this.#canvasStore.gridSize.height / 2 + this.radius
-        ? -this.#canvasStore.gridSize.height / 2 + this.radius
-        : // or if outside bottom bounds
-          this.#ioStore.mousePosOffset.y > this.#canvasStore.gridSize.height / 2 - this.radius
-          ? this.#canvasStore.gridSize.height / 2 - this.radius
-          : this.#ioStore.mousePosOffset.y
-
-    const finalX = Math.round(unscaledX / this.#canvasStore.zoomScale)
-    const finalY = Math.round(unscaledY / this.#canvasStore.zoomScale)
-
-    this.pos = {
-      x: finalX,
-      y: finalY,
-    }
-  }
-
-  #updatePosition = () => {
-    switch (this.type) {
-      case "rectangle":
-        this.#updateRectanglePosition()
-        break
-      case "circle":
-        this.#updateCirclePosition()
-        break
-      default:
-        assertExhaustiveGuard(this.type)
-    }
-  }
-
-  #drawRectangle = () => {
-    if (!this.#canvasStore.ctx || !this.fillColor || !this.borderColor || !this.borderRadius) {
-      return
-    }
-
-    this.#canvasStore.ctx.fillStyle = this.fillColor
-    this.#canvasStore.ctx.strokeStyle = this.borderColor
-    this.#canvasStore.ctx.beginPath()
-    this.#canvasStore.ctx.roundRect(
-      this.pos.x - config.nodes.rectangle.width / 2,
-      this.pos.y - config.nodes.rectangle.height / 2,
-      config.nodes.rectangle.width,
-      config.nodes.rectangle.height,
-      [this.borderRadius],
-    )
-    this.#canvasStore.ctx.fill()
-    this.#canvasStore.ctx.stroke()
-  }
-
-  #drawCircle = () => {
-    if (!this.#canvasStore.ctx || !this.fillColor || !this.borderColor) {
-      return
-    }
-
-    this.#canvasStore.ctx.fillStyle = this.fillColor
-    this.#canvasStore.ctx.strokeStyle = this.borderColor
-    this.#canvasStore.ctx.beginPath()
-    this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, config.nodes.circle.radius, 0, 2 * Math.PI)
-    this.#canvasStore.ctx.fill()
-    this.#canvasStore.ctx.stroke()
+    this.primitive = null
   }
 
   #setup = () => {
-    if (!this.#canvasStore.cssVars) return
-
-    const cssFillColor = "transparent"
-    const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
-    const cssBorderRadius = this.#canvasStore.cssVars.get("--border-radius-default")
-
-    if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
-
-    this.fillColor = cssFillColor as string
-    this.borderColor = cssBorderColor as string
-    this.borderRadius = parseInt(cssBorderRadius as string, 10)
-
-    this.scale()
-  }
-
-  public place = () => {
-    if (!this.#canvasStore.cssVars) return
-
-    const newCssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
-    const newCssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
-
-    if (!newCssFillColor || !newCssBorderColor) return
-
-    this.#updatePosition()
-
-    this.fillColor = newCssFillColor as string
-    this.borderColor = newCssBorderColor as string
-    this.mode = "static"
-  }
-
-  public scale = () => {
-    this.width =
-      this.type === "rectangle"
-        ? +(config.nodes.rectangle.width * this.#canvasStore.zoomScale).toPrecision(3)
-        : null
-    this.height =
-      this.type === "rectangle"
-        ? +(config.nodes.rectangle.height * this.#canvasStore.zoomScale).toPrecision(3)
-        : null
-    this.radius =
-      this.type === "circle"
-        ? +(config.nodes.circle.radius * this.#canvasStore.zoomScale).toPrecision(3)
-        : null
-  }
-
-  public draw = () => {
-    switch (this.mode) {
-      case "preview":
-        this.#updatePosition()
-        break
-      case "static":
-        break
-      default:
-        assertExhaustiveGuard(this.mode)
-    }
-
     switch (this.type) {
       case "rectangle":
-        this.#drawRectangle()
+        this.primitive = new Rectangle()
         break
       case "circle":
-        this.#drawCircle()
+        this.primitive = new Circle()
         break
       default:
         assertExhaustiveGuard(this.type)
     }
+
+    this.primitive?.init()
+  }
+
+  public place = () => {
+    if (!this.primitive) return
+
+    this.primitive.place()
+  }
+
+  public scale = () => {
+    if (!this.primitive) return
+
+    this.primitive.updateScale()
+  }
+
+  public draw = () => {
+    if (!this.primitive) return
+
+    if (this.primitive.mode === "preview") {
+      this.primitive.updatePosition()
+    }
+
+    this.primitive.draw()
   }
 
   public init() {

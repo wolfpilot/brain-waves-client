@@ -2,30 +2,22 @@ import { createSharedComposable } from "@vueuse/core"
 import { v4 as uuidv4 } from "uuid"
 
 // Types
-import type { NodeType } from "@utils/canvas/nodes/Node.canvas"
+import type { PrimitiveType } from "@ts/primitives.types"
 
 // Stores
 import { useEngineStore } from "@stores/engine.stores"
-import { useIoStore } from "@stores/io.stores"
 
 // Utils
 import { CanvasNode } from "@utils/canvas/nodes"
 
 const useEngine = () => {
   const engineStore = useEngineStore()
-  const ioStore = useIoStore()
 
   // Helpers
-  const _addNode = (type: NodeType): CanvasNode | void => {
-    if (!ioStore.mousePos) return
-
+  const _addNode = (type: PrimitiveType): CanvasNode | void => {
     const newId = uuidv4()
     const node = new CanvasNode({
       type,
-      pos: {
-        x: ioStore.mousePos.x,
-        y: ioStore.mousePos.y,
-      },
     })
 
     node.init()
