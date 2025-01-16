@@ -25,7 +25,7 @@ export const useCanvasStore = defineStore("canvas", () => {
     gridSize: <Dimensions | null>null,
     viewportPos: <Coords | null>null,
     zoomLevel: <number>canvasConfig.zoom.level,
-    zoomScale: <number>canvasConfig.zoom.factor,
+    zoomScale: <number>canvasConfig.zoom.scale,
     activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
   })
 
