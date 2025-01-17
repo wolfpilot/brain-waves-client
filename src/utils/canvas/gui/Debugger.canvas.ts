@@ -1,5 +1,6 @@
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
+import { config as debugConfig } from "@configs/debug.config"
 
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
@@ -120,19 +121,19 @@ class DebuggerImpl implements Debugger {
   }
 
   public draw = () => {
-    if (canvasConfig.debug.surface) {
+    if (debugConfig.surface) {
       this.#drawSurface()
     }
 
-    if (canvasConfig.debug.corner) {
+    if (debugConfig.corner) {
       this.#drawCorners()
     }
 
-    if (canvasConfig.debug.crosshair) {
+    if (debugConfig.crosshair) {
       this.#drawCrosshair()
     }
 
-    if (canvasConfig.debug.centre) {
+    if (debugConfig.centre) {
       this.#drawCentre()
     }
   }

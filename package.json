@@ -24,6 +24,7 @@
     "pinia": "^2.2.6",
     "sanitize.css": "^13.0.0",
     "socket.io-client": "^4.8.1",
+    "tweakpane": "^4.0.5",
     "uuid": "^11.0.4",
     "vue": "^3.5.13",
     "vue-router": "^4.4.5",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@tsconfig/node22": "^22.0.0",
+    "@tweakpane/core": "^2.0.5",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.9.3",
     "@vitejs/plugin-vue": "^5.2.1",
