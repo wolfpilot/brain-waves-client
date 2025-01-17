@@ -9,7 +9,7 @@ import { type IoStore, useIoStore } from "@stores/io.stores"
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
 
 // Canvas
-import { Debugger } from "@utils/canvas/gui"
+import { GUI, Debugger } from "@utils/canvas/gui"
 
 export interface Engine {
   init: () => void
@@ -19,6 +19,7 @@ class EngineImpl implements Engine {
   #engineStore: EngineStore
   #canvasStore: CanvasStore
   #ioStore: IoStore
+  #gui: GUI
   #debugger: Debugger
 
   constructor() {
@@ -26,6 +27,7 @@ class EngineImpl implements Engine {
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
 
+    this.#gui = new GUI()
     this.#debugger = new Debugger()
   }
 
@@ -127,6 +129,7 @@ class EngineImpl implements Engine {
   }
 
   public init = () => {
+    this.#gui.init()
     this.#debugger.init()
 
     this.#render()
