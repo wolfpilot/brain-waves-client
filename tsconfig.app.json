@@ -6,6 +6,8 @@
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
+    "allowUnreachableCode": true,
+
     "paths": {
       "@assets/*": ["./src/assets/*"],
       "@components/*": ["./src/components/*"],
