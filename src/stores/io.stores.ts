@@ -70,4 +70,4 @@ export const useIoStore = defineStore("io", () => {
   }
 })
 
-export type IoStore = Omit<ReturnType<typeof useIoStore>, keyof ReturnType<typeof defineStore>>
+export type IoStore = ReturnType<typeof useIoStore>

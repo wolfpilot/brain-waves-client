@@ -14,7 +14,4 @@ export const useWebSocketStore = defineStore("websocket", () => {
   }
 })
 
-export type WebSocketStore = Omit<
-  ReturnType<typeof useWebSocketStore>,
-  keyof ReturnType<typeof defineStore>
->
+export type WebSocketStore = ReturnType<typeof useWebSocketStore>
