@@ -1,4 +1,5 @@
 import { watch } from "vue"
+import { storeToRefs } from "pinia"
 
 // Stores
 import { type EngineStore, useEngineStore } from "@stores/engine.stores"
@@ -85,8 +86,6 @@ class EngineImpl implements Engine {
     this.#engineStore.nodes.forEach((node) => node.draw())
 
     this.#canvasStore.ctx.restore()
-
-    window.requestAnimationFrame(this.#render)
   }
 
   #placeNode = () => {
@@ -109,6 +108,7 @@ class EngineImpl implements Engine {
       case "Rectangle":
       case "Circle":
         this.#placeNode()
+        this.#render()
         break
       default:
         assertExhaustiveGuard(this.#canvasStore.activeTool)
@@ -128,13 +128,66 @@ class EngineImpl implements Engine {
     }
   }
 
+  #handleOnMousePosOffsetChange = () => {
+    if (!this.#engineStore.activeNodeId) return
+
+    const activeNode = this.#engineStore.nodes.get(this.#engineStore.activeNodeId)
+
+    if (!activeNode) return
+
+    switch (activeNode.primitive.mode) {
+      case "preview":
+        this.#render()
+        break
+      case "done":
+        break
+      default:
+        assertExhaustiveGuard(activeNode.primitive.mode)
+        break
+    }
+  }
+
+  #handleOnActiveToolChange = () => {
+    switch (this.#canvasStore.activeTool) {
+      case "Select":
+        this.#render()
+        break
+      case "Rectangle":
+      case "Circle":
+        break
+      default:
+        assertExhaustiveGuard(this.#canvasStore.activeTool)
+        break
+    }
+  }
+
+  #handleOnViewportOffsetChange = () => {
+    this.#render()
+  }
+
+  #handleOnZoomLevelChange = () => {
+    this.#render()
+  }
+
+  #bindListeners = () => {
+    const { mousePosOffset } = storeToRefs(this.#ioStore)
+    const { activeTool, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
+
+    watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
+
+    watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
+    watch(activeTool, this.#handleOnActiveToolChange)
+    watch(viewportOffset, this.#handleOnViewportOffsetChange)
+    watch(zoomLevel, this.#handleOnZoomLevelChange)
+  }
+
   public init = () => {
+    this.#bindListeners()
+
     this.#gui.init()
     this.#debugger.init()
 
     this.#render()
-
-    watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
   }
 }
 

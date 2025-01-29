@@ -32,7 +32,4 @@ export const useEngineStore = defineStore("engine", () => {
   }
 })
 
-export type EngineStore = Omit<
-  ReturnType<typeof useEngineStore>,
-  keyof ReturnType<typeof defineStore>
->
+export type EngineStore = ReturnType<typeof useEngineStore>

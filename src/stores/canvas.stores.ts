@@ -127,7 +127,4 @@ export const useCanvasStore = defineStore("canvas", () => {
   }
 })
 
-export type CanvasStore = Omit<
-  ReturnType<typeof useCanvasStore>,
-  keyof ReturnType<typeof defineStore>
->
+export type CanvasStore = ReturnType<typeof useCanvasStore>
