@@ -16,47 +16,41 @@ export interface CanvasNode {
   place: () => void
 }
 
+const getPrimitive = (type: PrimitiveType): Primitives => {
+  switch (type) {
+    case "rectangle":
+      return new Rectangle()
+    case "circle":
+      return new Circle()
+    default:
+      return assertExhaustiveGuard(type)
+  }
+}
+
 class CanvasNodeImpl implements CanvasNode {
   mode: PrimitiveMode
   type: PrimitiveType
-  primitive: Primitives | null
+  primitive: Primitives
 
   constructor({ type }: Props) {
     this.mode = "preview"
     this.type = type
-    this.primitive = null
+    this.primitive = getPrimitive(type)
   }
 
   #setup = () => {
-    switch (this.type) {
-      case "rectangle":
-        this.primitive = new Rectangle()
-        break
-      case "circle":
-        this.primitive = new Circle()
-        break
-      default:
-        assertExhaustiveGuard(this.type)
-    }
-
-    this.primitive?.init()
+    this.primitive.init()
   }
 
   public place = () => {
-    if (!this.primitive) return
-
     this.primitive.place()
   }
 
   public scale = () => {
-    if (!this.primitive) return
-
     this.primitive.updateScale()
   }
 
   public draw = () => {
-    if (!this.primitive) return
-
     if (this.primitive.mode === "preview") {
       this.primitive.updatePosition()
     }

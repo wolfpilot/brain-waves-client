@@ -15,7 +15,7 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 // Utils
 import { useCanvas } from "@utils/services"
 import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
-import Engine from "@utils/canvas/core/Engine.canvas"
+import { Engine } from "@utils/canvas/core"
 import { IoManager } from "@utils/managers"
 
 // Components

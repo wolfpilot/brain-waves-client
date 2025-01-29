@@ -14,7 +14,7 @@ const useEngine = () => {
   const engineStore = useEngineStore()
 
   // Helpers
-  const _addNode = (type: PrimitiveType): CanvasNode | void => {
+  const _handleAddNode = (type: PrimitiveType): CanvasNode | void => {
     const newId = uuidv4()
     const node = new CanvasNode({
       type,
@@ -32,11 +32,12 @@ const useEngine = () => {
     if (!engineStore.activeNodeId) return
 
     engineStore.removeNode(engineStore.activeNodeId)
+    engineStore.setActiveNodeId(null)
   }
 
-  const addRectangle = (): CanvasNode | void => _addNode("rectangle")
+  const addRectangle = (): CanvasNode | void => _handleAddNode("rectangle")
 
-  const addCircle = (): CanvasNode | void => _addNode("circle")
+  const addCircle = (): CanvasNode | void => _handleAddNode("circle")
 
   return {
     clearActiveNode,
