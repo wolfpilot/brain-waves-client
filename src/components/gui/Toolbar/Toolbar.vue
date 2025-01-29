@@ -15,6 +15,18 @@ import { useCanvas } from "@utils/services"
 
 const canvasStore = useCanvasStore()
 const canvasService = useCanvas()
+
+const handleZoomIn = () => {
+  if (!canvasStore.viewportPos) return
+
+  canvasService.doZoomIn(canvasStore.viewportPos)
+}
+
+const handleZoomOut = () => {
+  if (!canvasStore.viewportPos) return
+
+  canvasService.doZoomOut(canvasStore.viewportPos)
+}
 </script>
 
 <template>
@@ -49,15 +61,11 @@ const canvasService = useCanvas()
         <ViewfinderCircleIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomIn" @click="canvasService.doZoomIn">
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomIn" @click="handleZoomIn">
         <PlusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
 
-      <button
-        :class="$style.btn"
-        :title="TOOLBAR_CONTROLS.zoomOut"
-        @click="canvasService.doZoomOut"
-      >
+      <button :class="$style.btn" :title="TOOLBAR_CONTROLS.zoomOut" @click="handleZoomOut">
         <MinusIcon :class="[$style.btnIcon, $style.btnIconStroke]" />
       </button>
     </div>
