@@ -164,7 +164,11 @@ const onWheelOffsetYChange = (
   state: IoStore["wheelOffsetY"],
   prevState: IoStore["wheelOffsetY"],
 ) => {
-  return state - prevState < 0 ? canvasService.doZoomIn() : canvasService.doZoomOut()
+  if (!ioStore.mousePosOffset) return
+
+  return state - prevState < 0
+    ? canvasService.doZoomIn(ioStore.mousePosOffset)
+    : canvasService.doZoomOut(ioStore.mousePosOffset)
 }
 
 const onZoomScaleChange = (state: CanvasStore["zoomScale"]) => {

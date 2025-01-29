@@ -1,5 +1,8 @@
 import { createSharedComposable } from "@vueuse/core"
 
+// Types
+import type { Coords } from "@ts/math.types"
+
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 
@@ -8,14 +11,12 @@ import { TOOLBAR_TOOLS } from "@constants/toolbar.constants"
 
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
-import { useIoStore } from "@stores/io.stores"
 
 // Utils
 import { useEngine } from "@utils/services"
 
 const useCanvas = () => {
   const canvasStore = useCanvasStore()
-  const ioStore = useIoStore()
   const engineService = useEngine()
 
   // Helpers
@@ -23,11 +24,12 @@ const useCanvas = () => {
     scaleFactor: number,
     level: CanvasStore["zoomLevel"],
     scale: CanvasStore["zoomScale"],
+    position: Coords = { x: 0, y: 0 },
   ) => {
-    if (!canvasStore.viewportPos || !ioStore.mousePosOffset) return
+    if (!canvasStore.viewportPos) return
 
-    const dX = canvasStore.viewportPos.x + ioStore.mousePosOffset.x * (scaleFactor - 1)
-    const dY = canvasStore.viewportPos.y + ioStore.mousePosOffset.y * (scaleFactor - 1)
+    const dX = canvasStore.viewportPos.x + position.x * (scaleFactor - 1)
+    const dY = canvasStore.viewportPos.y + position.y * (scaleFactor - 1)
 
     canvasStore.setViewportPos({
       x: -dX,
@@ -64,24 +66,24 @@ const useCanvas = () => {
     canvasStore.setActiveTool(TOOLBAR_TOOLS.circle)
   }
 
-  const doZoomIn = () => {
+  const doZoomIn = (newPosition: Coords) => {
     if (canvasStore.zoomLevel >= canvasConfig.zoom.max) return
 
     const newScaleFactor = canvasConfig.zoom.factor
     const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
     const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
 
-    zoomTo(newScaleFactor, newLevel, newScale)
+    zoomTo(newScaleFactor, newLevel, newScale, newPosition)
   }
 
-  const doZoomOut = () => {
+  const doZoomOut = (newPosition: Coords) => {
     if (canvasStore.zoomLevel <= canvasConfig.zoom.min) return
 
     const newScaleFactor = 1 / canvasConfig.zoom.factor
     const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
     const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
 
-    zoomTo(newScaleFactor, newLevel, newScale)
+    zoomTo(newScaleFactor, newLevel, newScale, newPosition)
   }
 
   const doReset = () => {
