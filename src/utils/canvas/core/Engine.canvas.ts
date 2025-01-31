@@ -1,4 +1,4 @@
-import { watch } from "vue"
+import { watch, nextTick } from "vue"
 import { storeToRefs } from "pinia"
 
 // Stores
@@ -159,6 +159,24 @@ class EngineImpl implements Engine {
         assertExhaustiveGuard(this.#canvasStore.activeTool)
         break
     }
+  }
+
+  #handleOnCanvasSizeChange = async () => {
+    /**
+     * Wait for DOM to update.
+     *
+     * By default, the watcher side-effects would run as soon as the store is updated,
+     * e.g. the Canvas re-renders when the `canvasSize` changes.
+     *
+     * This results in a concurrency issue since Vue normally updates the Canvas size
+     * (width and height) only afterwards, which results in the Canvas clearing and
+     * resetting itself after being drawn on.
+     *
+     * Instead, we wait for the Canvas DOM elem to update first, then run our transforms.
+     */
+    await nextTick()
+
+    this.#render()
   }
 
   #handleOnViewportOffsetChange = () => {
