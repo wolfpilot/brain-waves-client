@@ -1,6 +1,6 @@
 export const config = {
   surface: false,
-  corner: false,
+  corners: false,
   crosshair: false,
   centre: false,
 }

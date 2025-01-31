@@ -125,7 +125,7 @@ class DebuggerImpl implements Debugger {
       this.#drawSurface()
     }
 
-    if (debugConfig.corner) {
+    if (debugConfig.corners) {
       this.#drawCorners()
     }
 

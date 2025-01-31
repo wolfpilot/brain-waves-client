@@ -5,6 +5,7 @@ import { storeToRefs } from "pinia"
 import { type EngineStore, useEngineStore } from "@stores/engine.stores"
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 import { type IoStore, useIoStore } from "@stores/io.stores"
+import { type GUIStore, useGUIStore } from "@stores/gui.stores"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
@@ -20,6 +21,7 @@ class EngineImpl implements Engine {
   #engineStore: EngineStore
   #canvasStore: CanvasStore
   #ioStore: IoStore
+  #guiStore: GUIStore
   #gui: GUI
   #debugger: Debugger
 
@@ -27,6 +29,7 @@ class EngineImpl implements Engine {
     this.#engineStore = useEngineStore()
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
+    this.#guiStore = useGUIStore()
 
     this.#gui = new GUI()
     this.#debugger = new Debugger()
@@ -187,6 +190,10 @@ class EngineImpl implements Engine {
     this.#render()
   }
 
+  #handleOnGUIChange = () => {
+    this.#render()
+  }
+
   #bindListeners = () => {
     const { mousePosOffset } = storeToRefs(this.#ioStore)
     const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
@@ -198,6 +205,8 @@ class EngineImpl implements Engine {
     watch(canvasSize, this.#handleOnCanvasSizeChange)
     watch(viewportOffset, this.#handleOnViewportOffsetChange)
     watch(zoomLevel, this.#handleOnZoomLevelChange)
+
+    watch(this.#guiStore, this.#handleOnGUIChange)
   }
 
   public init = async () => {
