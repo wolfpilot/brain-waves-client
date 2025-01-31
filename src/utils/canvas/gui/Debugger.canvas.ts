@@ -6,7 +6,7 @@ import { config as debugConfig } from "@configs/debug.config"
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 
 export interface Debugger {
-  init: () => void
+  init: () => Promise<void>
   draw: () => void
 }
 
@@ -140,6 +140,8 @@ class DebuggerImpl implements Debugger {
 
   public init = () => {
     this.draw()
+
+    return Promise.resolve()
   }
 }
 

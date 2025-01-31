@@ -171,22 +171,21 @@ class EngineImpl implements Engine {
 
   #bindListeners = () => {
     const { mousePosOffset } = storeToRefs(this.#ioStore)
-    const { activeTool, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
+    const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
 
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
 
     watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
     watch(activeTool, this.#handleOnActiveToolChange)
+    watch(canvasSize, this.#handleOnCanvasSizeChange)
     watch(viewportOffset, this.#handleOnViewportOffsetChange)
     watch(zoomLevel, this.#handleOnZoomLevelChange)
   }
 
-  public init = () => {
+  public init = async () => {
+    await Promise.all([this.#gui.init(), this.#debugger.init()])
+
     this.#bindListeners()
-
-    this.#gui.init()
-    this.#debugger.init()
-
     this.#render()
   }
 }

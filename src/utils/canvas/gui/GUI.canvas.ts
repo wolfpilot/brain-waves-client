@@ -4,7 +4,7 @@ import { Pane } from "tweakpane"
 import { config } from "@configs/debug.config"
 
 export interface GUI {
-  init: () => void
+  init: () => Promise<void>
 }
 
 class GUIImpl implements GUI {
@@ -33,6 +33,8 @@ class GUIImpl implements GUI {
 
   public init = () => {
     this.#setup()
+
+    return Promise.resolve()
   }
 }
 
