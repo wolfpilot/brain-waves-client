@@ -15,8 +15,8 @@ import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
 // Utils
 import { useCanvas } from "@utils/services"
 import { getCssVars, setCssVar } from "@utils/helpers/dom.helpers"
-import { Engine } from "@utils/canvas/core"
 import { IoManager } from "@utils/managers"
+import { Engine } from "@utils/canvas/core"
 
 // Components
 import { Toolbar } from "@components/gui"
@@ -120,11 +120,11 @@ onMounted(() => {
   canvasService.doReset()
 
   // Initialize entities
-  const engine = new Engine()
   const ioManager = new IoManager()
+  const engine = new Engine()
 
-  engine.init()
   ioManager.init()
+  engine.init()
 })
 
 // Handlers

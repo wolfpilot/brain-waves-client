@@ -1,10 +1,11 @@
-import { watch } from "vue"
+import { watch, nextTick } from "vue"
 import { storeToRefs } from "pinia"
 
 // Stores
 import { type EngineStore, useEngineStore } from "@stores/engine.stores"
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 import { type IoStore, useIoStore } from "@stores/io.stores"
+import { type GUIStore, useGUIStore } from "@stores/gui.stores"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
@@ -20,6 +21,7 @@ class EngineImpl implements Engine {
   #engineStore: EngineStore
   #canvasStore: CanvasStore
   #ioStore: IoStore
+  #guiStore: GUIStore
   #gui: GUI
   #debugger: Debugger
 
@@ -27,6 +29,7 @@ class EngineImpl implements Engine {
     this.#engineStore = useEngineStore()
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
+    this.#guiStore = useGUIStore()
 
     this.#gui = new GUI()
     this.#debugger = new Debugger()
@@ -161,6 +164,24 @@ class EngineImpl implements Engine {
     }
   }
 
+  #handleOnCanvasSizeChange = async () => {
+    /**
+     * Wait for DOM to update.
+     *
+     * By default, the watcher side-effects would run as soon as the store is updated,
+     * e.g. the Canvas re-renders when the `canvasSize` changes.
+     *
+     * This results in a concurrency issue since Vue normally updates the Canvas size
+     * (width and height) only afterwards, which results in the Canvas clearing and
+     * resetting itself after being drawn on.
+     *
+     * Instead, we wait for the Canvas DOM elem to update first, then run our transforms.
+     */
+    await nextTick()
+
+    this.#render()
+  }
+
   #handleOnViewportOffsetChange = () => {
     this.#render()
   }
@@ -169,24 +190,29 @@ class EngineImpl implements Engine {
     this.#render()
   }
 
+  #handleOnGUIChange = () => {
+    this.#render()
+  }
+
   #bindListeners = () => {
     const { mousePosOffset } = storeToRefs(this.#ioStore)
-    const { activeTool, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
+    const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
 
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
 
     watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
     watch(activeTool, this.#handleOnActiveToolChange)
+    watch(canvasSize, this.#handleOnCanvasSizeChange)
     watch(viewportOffset, this.#handleOnViewportOffsetChange)
     watch(zoomLevel, this.#handleOnZoomLevelChange)
+
+    watch(this.#guiStore, this.#handleOnGUIChange)
   }
 
-  public init = () => {
+  public init = async () => {
+    await Promise.all([this.#gui.init(), this.#debugger.init()])
+
     this.#bindListeners()
-
-    this.#gui.init()
-    this.#debugger.init()
-
     this.#render()
   }
 }
