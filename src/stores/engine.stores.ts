@@ -12,6 +12,7 @@ export const useEngineStore = defineStore("engine", () => {
   const state = reactive({
     nodes: new Map<string, CanvasNode>(),
     activeNodeId: ref<string | null>(null),
+    hoveredNodeId: ref<string | null>(null),
   })
 
   const actions = {
@@ -20,6 +21,9 @@ export const useEngineStore = defineStore("engine", () => {
     },
     removeNode(id: string) {
       state.nodes.delete(id)
+    },
+    setHoveredNodeId(val: string | null) {
+      state.hoveredNodeId = val
     },
     setActiveNodeId(val: string | null) {
       state.activeNodeId = val

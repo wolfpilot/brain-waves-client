@@ -1,17 +1,19 @@
 // Types
+import type { Coords } from "@ts/math.types"
 import type { RectanglePrimitive } from "@utils/canvas/primitives/Rectangle.canvas"
 import type { CirclePrimitive } from "@utils/canvas/primitives/Circle.canvas"
 
-export interface PrimitiveBaseAPI {
-  mode: PrimitiveMode
+export interface PrimitiveBase {
   type: PrimitiveType
+  pos: Coords | null
   init: () => void
   draw: () => void
   place: () => void
+  hover: (val: boolean) => void
   updateScale: () => void
   updatePosition: () => void
 }
 
 export type Primitives = RectanglePrimitive | CirclePrimitive
-export type PrimitiveMode = "preview" | "done"
+export type PrimitiveMode = "preview" | "done" | "hover"
 export type PrimitiveType = "rectangle" | "circle"

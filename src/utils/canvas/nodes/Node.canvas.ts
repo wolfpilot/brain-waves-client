@@ -10,13 +10,18 @@ export interface Props {
 }
 
 export interface CanvasNode {
+  mode: PrimitiveMode
+  type: PrimitiveType
+  primitive: Primitives
+  isHovered: boolean
   init: () => void
   draw: () => void
   scale: () => void
-  place: () => void
+  updateMode: (mode: PrimitiveMode) => void
+  updateIsHovered: (val: boolean) => void
 }
 
-const getPrimitive = (type: PrimitiveType): Primitives => {
+const generatePrimitive = (type: PrimitiveType): Primitives => {
   switch (type) {
     case "rectangle":
       return new Rectangle()
@@ -27,23 +32,40 @@ const getPrimitive = (type: PrimitiveType): Primitives => {
   }
 }
 
+/**
+ * Acts as a proxy for common properties and methods of various Primitives
+ */
 class CanvasNodeImpl implements CanvasNode {
   mode: PrimitiveMode
   type: PrimitiveType
   primitive: Primitives
+  isHovered: boolean
 
   constructor({ type }: Props) {
     this.mode = "preview"
     this.type = type
-    this.primitive = getPrimitive(type)
+    this.primitive = generatePrimitive(type)
+    this.isHovered = false
   }
 
   #setup = () => {
     this.primitive.init()
   }
 
-  public place = () => {
-    this.primitive.place()
+  public updateIsHovered = (val: boolean) => {
+    if (this.mode === "done") {
+      this.primitive.hover(val)
+    }
+
+    this.isHovered = val
+  }
+
+  public updateMode = (mode: PrimitiveMode) => {
+    if (mode === "done") {
+      this.primitive.place()
+    }
+
+    this.mode = mode
   }
 
   public scale = () => {
@@ -51,7 +73,7 @@ class CanvasNodeImpl implements CanvasNode {
   }
 
   public draw = () => {
-    if (this.primitive.mode === "preview") {
+    if (this.mode === "preview") {
       this.primitive.updatePosition()
     }
 

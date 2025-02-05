@@ -4,16 +4,25 @@ import { type IoStore, useIoStore } from "@stores/io.stores"
 
 // Types
 import type { Coords } from "@ts/math.types"
-import type { PrimitiveBaseAPI, PrimitiveMode, PrimitiveType } from "@ts/primitives.types"
+import type { PrimitiveBase, PrimitiveMode } from "@ts/primitives.types"
 
 // Configs
 import { config } from "@configs/canvas.config"
 
-export type RectanglePrimitive = PrimitiveBaseAPI
+// Utils
+import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+
+export type RectanglePrimitive = PrimitiveBase & {
+  type: "rectangle"
+  width: number | null
+  height: number | null
+  fillColor: string | null
+  borderColor: string | null
+  borderRadius: number | null
+}
 
 class RectanglePrimitiveImpl implements RectanglePrimitive {
-  mode: PrimitiveMode
-  type: PrimitiveType
+  type: "rectangle"
   pos: Coords | null
   width: number | null
   height: number | null
@@ -24,7 +33,6 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
   #ioStore: IoStore
 
   constructor() {
-    this.mode = "preview"
     this.type = "rectangle"
     this.pos = null
     this.width = null
@@ -36,33 +44,59 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
     this.#ioStore = useIoStore()
   }
 
-  #setup = () => {
+  #updateStyles = (mode: PrimitiveMode) => {
     if (!this.#canvasStore.cssVars) return
 
-    const cssFillColor = "transparent"
-    const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
-    const cssBorderRadius = this.#canvasStore.cssVars.get("--border-radius-default")
+    switch (mode) {
+      case "preview": {
+        const cssFillColor = "transparent"
+        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
+        const cssBorderRadius = this.#canvasStore.cssVars.get("--border-radius-default")
 
-    if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
+        if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
 
-    this.fillColor = cssFillColor as string
-    this.borderColor = cssBorderColor as string
-    this.borderRadius = parseInt(cssBorderRadius as string, 10)
+        this.fillColor = cssFillColor as string
+        this.borderColor = cssBorderColor as string
+        this.borderRadius = parseInt(cssBorderRadius as string, 10)
 
+        break
+      }
+      case "done": {
+        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
+        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
+
+        if (!cssFillColor || !cssBorderColor) return
+
+        this.fillColor = cssFillColor as string
+        this.borderColor = cssBorderColor as string
+
+        break
+      }
+      case "hover": {
+        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-hover-fill")
+
+        if (!cssFillColor) return
+
+        this.fillColor = cssFillColor as string
+
+        break
+      }
+      default:
+        assertExhaustiveGuard(mode)
+    }
+  }
+
+  #setup = () => {
+    this.#updateStyles("preview")
     this.updateScale()
   }
 
   public place = () => {
-    if (!this.#canvasStore.cssVars) return
+    this.#updateStyles("done")
+  }
 
-    const newCssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
-    const newCssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
-
-    if (!newCssFillColor || !newCssBorderColor) return
-
-    this.fillColor = newCssFillColor as string
-    this.borderColor = newCssBorderColor as string
-    this.mode = "done"
+  public hover = (val: boolean) => {
+    this.#updateStyles(val ? "hover" : "done")
   }
 
   public draw = () => {

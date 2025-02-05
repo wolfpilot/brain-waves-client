@@ -1,6 +1,9 @@
 import { watch, nextTick } from "vue"
 import { storeToRefs } from "pinia"
 
+// Types
+import type { Coords } from "@ts/math.types"
+
 // Stores
 import { type EngineStore, useEngineStore } from "@stores/engine.stores"
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
@@ -9,6 +12,7 @@ import { type GUIStore, useGUIStore } from "@stores/gui.stores"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+import { isInsideShape } from "@utils/helpers/canvas.helpers"
 
 // Canvas
 import { GUI, Debugger } from "@utils/canvas/gui"
@@ -98,7 +102,8 @@ class EngineImpl implements Engine {
 
     if (!activeNode) return
 
-    activeNode.place()
+    activeNode.updateMode("done")
+    this.#engineStore.setHoveredNodeId(this.#engineStore.activeNodeId)
     this.#engineStore.setActiveNodeId(null)
     this.#canvasStore.resetActiveTool()
   }
@@ -115,7 +120,6 @@ class EngineImpl implements Engine {
         break
       default:
         assertExhaustiveGuard(this.#canvasStore.activeTool)
-        break
     }
   }
 
@@ -131,22 +135,49 @@ class EngineImpl implements Engine {
     }
   }
 
-  #handleOnMousePosOffsetChange = () => {
-    if (!this.#engineStore.activeNodeId) return
+  #handleOnMousePosOffsetChange = (pos: Coords | null) => {
+    if (!pos) return
 
-    const activeNode = this.#engineStore.nodes.get(this.#engineStore.activeNodeId)
+    if (this.#canvasStore.activeTool === "Select") {
+      if (!this.#engineStore.nodes.size) return
 
-    if (!activeNode) return
+      /**
+       * As multiple shapes may overlap each other, keep track of all being hovered.
+       *
+       * This will be useful later on when determining which one is the topmost
+       * layer in the stack.
+       */
+      const hoveredIds = []
 
-    switch (activeNode.primitive.mode) {
-      case "preview":
-        this.#render()
-        break
-      case "done":
-        break
-      default:
-        assertExhaustiveGuard(activeNode.primitive.mode)
-        break
+      for (const [key, value] of this.#engineStore.nodes) {
+        if (isInsideShape(pos, value.primitive)) {
+          hoveredIds.push(key)
+        }
+      }
+
+      // Find the latest created ID which is also topmost in the stack
+      const hoveredNodeId = hoveredIds[hoveredIds.length - 1]
+
+      this.#engineStore.setHoveredNodeId(hoveredNodeId)
+    }
+
+    if (this.#engineStore.activeNodeId) {
+      const activeNode = this.#engineStore.nodes.get(this.#engineStore.activeNodeId)
+
+      if (!activeNode) return
+
+      switch (activeNode.mode) {
+        case "preview":
+          this.#render()
+          break
+        case "done":
+          break
+        case "hover":
+          break
+        default:
+          assertExhaustiveGuard(activeNode.mode)
+          break
+      }
     }
   }
 
@@ -162,6 +193,23 @@ class EngineImpl implements Engine {
         assertExhaustiveGuard(this.#canvasStore.activeTool)
         break
     }
+  }
+
+  #handleOnHoveredNodeIdChange = (
+    state: EngineStore["hoveredNodeId"],
+    prevState: EngineStore["hoveredNodeId"],
+  ) => {
+    // Set old hovered ID to false
+    if (prevState) {
+      this.#engineStore.nodes.get(prevState)?.updateIsHovered(false)
+    }
+
+    // Set currently hovered ID to true
+    if (state) {
+      this.#engineStore.nodes.get(state)?.updateIsHovered(true)
+    }
+
+    this.#render()
   }
 
   #handleOnCanvasSizeChange = async () => {
@@ -195,10 +243,12 @@ class EngineImpl implements Engine {
   }
 
   #bindListeners = () => {
+    const { hoveredNodeId } = storeToRefs(this.#engineStore)
     const { mousePosOffset } = storeToRefs(this.#ioStore)
     const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
 
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
+    watch(this.#guiStore, this.#handleOnGUIChange)
 
     watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
     watch(activeTool, this.#handleOnActiveToolChange)
@@ -206,7 +256,7 @@ class EngineImpl implements Engine {
     watch(viewportOffset, this.#handleOnViewportOffsetChange)
     watch(zoomLevel, this.#handleOnZoomLevelChange)
 
-    watch(this.#guiStore, this.#handleOnGUIChange)
+    watch(hoveredNodeId, this.#handleOnHoveredNodeIdChange)
   }
 
   public init = async () => {
