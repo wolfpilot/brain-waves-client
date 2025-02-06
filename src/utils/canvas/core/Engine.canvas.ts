@@ -105,7 +105,7 @@ class EngineImpl implements Engine {
       const hoveredIds = []
 
       for (const [key, value] of this.#engineStore.nodes) {
-        if (isInsideShape(pos, value.primitive)) {
+        if (isInsideShape(pos, value.primitive, this.#canvasStore.zoomScale)) {
           hoveredIds.push(key)
         }
       }
