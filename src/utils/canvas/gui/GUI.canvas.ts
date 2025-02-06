@@ -19,6 +19,31 @@ class GUIImpl implements GUI {
     this.#guiStore = null
   }
 
+  public init = () => {
+    this.#guiStore = useGUIStore()
+
+    this.#setup()
+
+    return Promise.resolve()
+  }
+
+  #setup = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const isDebugEnabled = urlParams.get("debug")
+
+    if (isDebugEnabled !== "true") return
+
+    this.#pane = new Pane({
+      title: "Grid",
+      expanded: true,
+    })
+
+    this.#pane.addBinding(config, "surface").on("change", this.#handleSurfaceChange)
+    this.#pane.addBinding(config, "corners").on("change", this.#handleCornersChange)
+    this.#pane.addBinding(config, "crosshair").on("change", this.#handleCrosshairChange)
+    this.#pane.addBinding(config, "centre").on("change", this.#handleCentreChange)
+  }
+
   #handleSurfaceChange = (e: TpChangeEvent<boolean>) => {
     if (!this.#guiStore) return
 
@@ -41,31 +66,6 @@ class GUIImpl implements GUI {
     if (!this.#guiStore) return
 
     this.#guiStore.setIsCentreEnabled(e.value)
-  }
-
-  #setup = () => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const isDebugEnabled = urlParams.get("debug")
-
-    if (isDebugEnabled !== "true") return
-
-    this.#pane = new Pane({
-      title: "Grid",
-      expanded: true,
-    })
-
-    this.#pane.addBinding(config, "surface").on("change", this.#handleSurfaceChange)
-    this.#pane.addBinding(config, "corners").on("change", this.#handleCornersChange)
-    this.#pane.addBinding(config, "crosshair").on("change", this.#handleCrosshairChange)
-    this.#pane.addBinding(config, "centre").on("change", this.#handleCentreChange)
-  }
-
-  public init = () => {
-    this.#guiStore = useGUIStore()
-
-    this.#setup()
-
-    return Promise.resolve()
   }
 }
 

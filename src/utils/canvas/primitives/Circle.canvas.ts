@@ -38,59 +38,6 @@ class CirclePrimitiveImpl implements CirclePrimitive {
     this.#ioStore = useIoStore()
   }
 
-  #updateStyles = (mode: PrimitiveMode) => {
-    if (!this.#canvasStore.cssVars) return
-
-    switch (mode) {
-      case "preview": {
-        const cssFillColor = "transparent"
-        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
-
-        if (!cssFillColor || !cssBorderColor) return
-
-        this.fillColor = cssFillColor as string
-        this.borderColor = cssBorderColor as string
-
-        break
-      }
-      case "done": {
-        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
-        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
-
-        if (!cssFillColor || !cssBorderColor) return
-
-        this.fillColor = cssFillColor as string
-        this.borderColor = cssBorderColor as string
-
-        break
-      }
-      case "hover": {
-        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-hover-fill")
-
-        if (!cssFillColor) return
-
-        this.fillColor = cssFillColor as string
-
-        break
-      }
-      default:
-        assertExhaustiveGuard(mode)
-    }
-  }
-
-  #setup = () => {
-    this.#updateStyles("preview")
-    this.updateScale()
-  }
-
-  public place = () => {
-    this.#updateStyles("done")
-  }
-
-  public hover = (val: boolean) => {
-    this.#updateStyles(val ? "hover" : "done")
-  }
-
   public draw = () => {
     if (!this.#canvasStore.ctx || !this.pos || !this.fillColor || !this.borderColor) {
       return
@@ -102,6 +49,19 @@ class CirclePrimitiveImpl implements CirclePrimitive {
     this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, config.nodes.circle.radius, 0, 2 * Math.PI)
     this.#canvasStore.ctx.fill()
     this.#canvasStore.ctx.stroke()
+  }
+
+  public init() {
+    this.#setup()
+    this.draw()
+  }
+
+  public place = () => {
+    this.#updateStyles("done")
+  }
+
+  public hover = (val: boolean) => {
+    this.#updateStyles(val ? "hover" : "done")
   }
 
   public updateScale = () => {
@@ -140,9 +100,49 @@ class CirclePrimitiveImpl implements CirclePrimitive {
     }
   }
 
-  public init() {
-    this.#setup()
-    this.draw()
+  #setup = () => {
+    this.#updateStyles("preview")
+    this.updateScale()
+  }
+
+  #updateStyles = (mode: PrimitiveMode) => {
+    if (!this.#canvasStore.cssVars) return
+
+    switch (mode) {
+      case "preview": {
+        const cssFillColor = "transparent"
+        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
+
+        if (!cssFillColor || !cssBorderColor) return
+
+        this.fillColor = cssFillColor as string
+        this.borderColor = cssBorderColor as string
+
+        break
+      }
+      case "done": {
+        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
+        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
+
+        if (!cssFillColor || !cssBorderColor) return
+
+        this.fillColor = cssFillColor as string
+        this.borderColor = cssBorderColor as string
+
+        break
+      }
+      case "hover": {
+        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-hover-fill")
+
+        if (!cssFillColor) return
+
+        this.fillColor = cssFillColor as string
+
+        break
+      }
+      default:
+        assertExhaustiveGuard(mode)
+    }
   }
 }
 

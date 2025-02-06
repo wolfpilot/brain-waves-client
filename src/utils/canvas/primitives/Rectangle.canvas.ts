@@ -44,51 +44,9 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
     this.#ioStore = useIoStore()
   }
 
-  #updateStyles = (mode: PrimitiveMode) => {
-    if (!this.#canvasStore.cssVars) return
-
-    switch (mode) {
-      case "preview": {
-        const cssFillColor = "transparent"
-        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
-        const cssBorderRadius = this.#canvasStore.cssVars.get("--border-radius-default")
-
-        if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
-
-        this.fillColor = cssFillColor as string
-        this.borderColor = cssBorderColor as string
-        this.borderRadius = parseInt(cssBorderRadius as string, 10)
-
-        break
-      }
-      case "done": {
-        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
-        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
-
-        if (!cssFillColor || !cssBorderColor) return
-
-        this.fillColor = cssFillColor as string
-        this.borderColor = cssBorderColor as string
-
-        break
-      }
-      case "hover": {
-        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-hover-fill")
-
-        if (!cssFillColor) return
-
-        this.fillColor = cssFillColor as string
-
-        break
-      }
-      default:
-        assertExhaustiveGuard(mode)
-    }
-  }
-
-  #setup = () => {
-    this.#updateStyles("preview")
-    this.updateScale()
+  public init() {
+    this.#setup()
+    this.draw()
   }
 
   public place = () => {
@@ -166,9 +124,51 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
     }
   }
 
-  public init() {
-    this.#setup()
-    this.draw()
+  #setup = () => {
+    this.#updateStyles("preview")
+    this.updateScale()
+  }
+
+  #updateStyles = (mode: PrimitiveMode) => {
+    if (!this.#canvasStore.cssVars) return
+
+    switch (mode) {
+      case "preview": {
+        const cssFillColor = "transparent"
+        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4-60")
+        const cssBorderRadius = this.#canvasStore.cssVars.get("--border-radius-default")
+
+        if (!cssFillColor || !cssBorderColor || !cssBorderRadius) return
+
+        this.fillColor = cssFillColor as string
+        this.borderColor = cssBorderColor as string
+        this.borderRadius = parseInt(cssBorderRadius as string, 10)
+
+        break
+      }
+      case "done": {
+        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-fill")
+        const cssBorderColor = this.#canvasStore.cssVars.get("--c-accent-4")
+
+        if (!cssFillColor || !cssBorderColor) return
+
+        this.fillColor = cssFillColor as string
+        this.borderColor = cssBorderColor as string
+
+        break
+      }
+      case "hover": {
+        const cssFillColor = this.#canvasStore.cssVars.get("--c-node-hover-fill")
+
+        if (!cssFillColor) return
+
+        this.fillColor = cssFillColor as string
+
+        break
+      }
+      default:
+        assertExhaustiveGuard(mode)
+    }
   }
 }
 

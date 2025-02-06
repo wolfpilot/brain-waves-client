@@ -15,8 +15,8 @@ export interface CanvasNode {
   primitive: Primitives
   isHovered: boolean
   init: () => void
-  draw: () => void
   scale: () => void
+  draw: () => void
   updateMode: (mode: PrimitiveMode) => void
   updateIsHovered: (val: boolean) => void
 }
@@ -48,24 +48,9 @@ class CanvasNodeImpl implements CanvasNode {
     this.isHovered = false
   }
 
-  #setup = () => {
-    this.primitive.init()
-  }
-
-  public updateIsHovered = (val: boolean) => {
-    if (this.mode === "done") {
-      this.primitive.hover(val)
-    }
-
-    this.isHovered = val
-  }
-
-  public updateMode = (mode: PrimitiveMode) => {
-    if (mode === "done") {
-      this.primitive.place()
-    }
-
-    this.mode = mode
+  public init() {
+    this.#setup()
+    this.draw()
   }
 
   public scale = () => {
@@ -80,9 +65,24 @@ class CanvasNodeImpl implements CanvasNode {
     this.primitive.draw()
   }
 
-  public init() {
-    this.#setup()
-    this.draw()
+  public updateMode = (mode: PrimitiveMode) => {
+    if (mode === "done") {
+      this.primitive.place()
+    }
+
+    this.mode = mode
+  }
+
+  public updateIsHovered = (val: boolean) => {
+    if (this.mode === "done") {
+      this.primitive.hover(val)
+    }
+
+    this.isHovered = val
+  }
+
+  #setup = () => {
+    this.primitive.init()
   }
 }
 

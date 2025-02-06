@@ -23,89 +23,56 @@ export interface Engine {
 
 class EngineImpl implements Engine {
   #engineStore: EngineStore
-  #canvasStore: CanvasStore
   #ioStore: IoStore
+  #canvasStore: CanvasStore
   #guiStore: GUIStore
   #gui: GUI
   #debugger: Debugger
 
   constructor() {
     this.#engineStore = useEngineStore()
-    this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
+    this.#canvasStore = useCanvasStore()
     this.#guiStore = useGUIStore()
 
     this.#gui = new GUI()
     this.#debugger = new Debugger()
   }
 
-  #clear = () => {
-    if (!this.#canvasStore.ctx || !this.#canvasStore.canvasSize) return
+  public init = async () => {
+    await Promise.all([this.#gui.init(), this.#debugger.init()])
 
-    this.#canvasStore.ctx.clearRect(
-      0,
-      0,
-      this.#canvasStore.canvasSize.width,
-      this.#canvasStore.canvasSize.height,
-    )
+    this.#bindListeners()
+    this.#render()
   }
 
-  #scale = () => {
-    if (!this.#canvasStore.ctx) return
+  #bindListeners = () => {
+    const { hoveredNodeId } = storeToRefs(this.#engineStore)
+    const { mousePosOffset } = storeToRefs(this.#ioStore)
+    const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
 
-    this.#canvasStore.ctx.scale(this.#canvasStore.zoomScale, this.#canvasStore.zoomScale)
+    watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
+    watch(this.#guiStore, this.#handleOnGUIChange)
 
-    this.#engineStore.nodes.forEach((node) => node.scale())
+    watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
+    watch(activeTool, this.#handleOnActiveToolChange)
+    watch(canvasSize, this.#handleOnCanvasSizeChange)
+    watch(viewportOffset, this.#handleOnViewportOffsetChange)
+    watch(zoomLevel, this.#handleOnZoomLevelChange)
+
+    watch(hoveredNodeId, this.#handleOnHoveredNodeIdChange)
   }
 
-  #pan = () => {
-    if (!this.#canvasStore.ctx || !this.#canvasStore.viewportPos) return
+  #handleOnMouseButtonsChange = (state: IoStore["activeMouseButtons"]) => {
+    if (!this.#canvasStore.activeTool) return
 
-    this.#canvasStore.ctx.translate(
-      -this.#canvasStore.viewportPos.x,
-      -this.#canvasStore.viewportPos.y,
-    )
-  }
-
-  #centre = () => {
-    if (!this.#canvasStore.ctx || !this.#canvasStore.canvasSize) return
-
-    this.#canvasStore.ctx.translate(
-      this.#canvasStore.canvasSize.width / 2,
-      this.#canvasStore.canvasSize.height / 2,
-    )
-  }
-
-  #render = () => {
-    if (!this.#canvasStore.ctx) return
-
-    this.#clear()
-
-    this.#canvasStore.ctx.save()
-
-    // Apply transforms
-    this.#centre()
-    this.#pan()
-    this.#scale()
-
-    this.#debugger.draw()
-
-    this.#engineStore.nodes.forEach((node) => node.draw())
-
-    this.#canvasStore.ctx.restore()
-  }
-
-  #placeNode = () => {
-    if (!this.#engineStore.activeNodeId) return
-
-    const activeNode = this.#engineStore.nodes.get(this.#engineStore.activeNodeId)
-
-    if (!activeNode) return
-
-    activeNode.updateMode("done")
-    this.#engineStore.setHoveredNodeId(this.#engineStore.activeNodeId)
-    this.#engineStore.setActiveNodeId(null)
-    this.#canvasStore.resetActiveTool()
+    switch (true) {
+      case state.get("left"):
+        this.#handleOnLeftClick()
+        break
+      default:
+        break
+    }
   }
 
   // Handlers
@@ -120,18 +87,6 @@ class EngineImpl implements Engine {
         break
       default:
         assertExhaustiveGuard(this.#canvasStore.activeTool)
-    }
-  }
-
-  #handleOnMouseButtonsChange = (state: IoStore["activeMouseButtons"]) => {
-    if (!this.#canvasStore.activeTool) return
-
-    switch (true) {
-      case state.get("left"):
-        this.#handleOnLeftClick()
-        break
-      default:
-        break
     }
   }
 
@@ -212,6 +167,18 @@ class EngineImpl implements Engine {
     this.#render()
   }
 
+  #handleOnGUIChange = () => {
+    this.#render()
+  }
+
+  #handleOnZoomLevelChange = () => {
+    this.#render()
+  }
+
+  #handleOnViewportOffsetChange = () => {
+    this.#render()
+  }
+
   #handleOnCanvasSizeChange = async () => {
     /**
      * Wait for DOM to update.
@@ -230,40 +197,73 @@ class EngineImpl implements Engine {
     this.#render()
   }
 
-  #handleOnViewportOffsetChange = () => {
-    this.#render()
+  #placeNode = () => {
+    if (!this.#engineStore.activeNodeId) return
+
+    const activeNode = this.#engineStore.nodes.get(this.#engineStore.activeNodeId)
+
+    if (!activeNode) return
+
+    activeNode.updateMode("done")
+    this.#engineStore.setHoveredNodeId(this.#engineStore.activeNodeId)
+    this.#engineStore.setActiveNodeId(null)
+    this.#canvasStore.resetActiveTool()
   }
 
-  #handleOnZoomLevelChange = () => {
-    this.#render()
+  #centre = () => {
+    if (!this.#canvasStore.ctx || !this.#canvasStore.canvasSize) return
+
+    this.#canvasStore.ctx.translate(
+      this.#canvasStore.canvasSize.width / 2,
+      this.#canvasStore.canvasSize.height / 2,
+    )
   }
 
-  #handleOnGUIChange = () => {
-    this.#render()
+  #pan = () => {
+    if (!this.#canvasStore.ctx || !this.#canvasStore.viewportPos) return
+
+    this.#canvasStore.ctx.translate(
+      -this.#canvasStore.viewportPos.x,
+      -this.#canvasStore.viewportPos.y,
+    )
   }
 
-  #bindListeners = () => {
-    const { hoveredNodeId } = storeToRefs(this.#engineStore)
-    const { mousePosOffset } = storeToRefs(this.#ioStore)
-    const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
+  #scale = () => {
+    if (!this.#canvasStore.ctx) return
 
-    watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
-    watch(this.#guiStore, this.#handleOnGUIChange)
+    this.#canvasStore.ctx.scale(this.#canvasStore.zoomScale, this.#canvasStore.zoomScale)
 
-    watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
-    watch(activeTool, this.#handleOnActiveToolChange)
-    watch(canvasSize, this.#handleOnCanvasSizeChange)
-    watch(viewportOffset, this.#handleOnViewportOffsetChange)
-    watch(zoomLevel, this.#handleOnZoomLevelChange)
-
-    watch(hoveredNodeId, this.#handleOnHoveredNodeIdChange)
+    this.#engineStore.nodes.forEach((node) => node.scale())
   }
 
-  public init = async () => {
-    await Promise.all([this.#gui.init(), this.#debugger.init()])
+  #clear = () => {
+    if (!this.#canvasStore.ctx || !this.#canvasStore.canvasSize) return
 
-    this.#bindListeners()
-    this.#render()
+    this.#canvasStore.ctx.clearRect(
+      0,
+      0,
+      this.#canvasStore.canvasSize.width,
+      this.#canvasStore.canvasSize.height,
+    )
+  }
+
+  #render = () => {
+    if (!this.#canvasStore.ctx) return
+
+    this.#clear()
+
+    this.#canvasStore.ctx.save()
+
+    // Apply transforms
+    this.#centre()
+    this.#pan()
+    this.#scale()
+
+    this.#debugger.draw()
+
+    this.#engineStore.nodes.forEach((node) => node.draw())
+
+    this.#canvasStore.ctx.restore()
   }
 }
 

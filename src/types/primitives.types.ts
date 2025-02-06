@@ -7,9 +7,9 @@ export interface PrimitiveBase {
   type: PrimitiveType
   pos: Coords | null
   init: () => void
-  draw: () => void
   place: () => void
   hover: (val: boolean) => void
+  draw: () => void
   updateScale: () => void
   updatePosition: () => void
 }
