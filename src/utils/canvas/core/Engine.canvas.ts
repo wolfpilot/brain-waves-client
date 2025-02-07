@@ -47,16 +47,16 @@ class EngineImpl implements Engine {
   }
 
   #bindListeners = () => {
-    const { hoveredNodeId } = storeToRefs(this.#engineStore)
+    const { activeNodeId, hoveredNodeId } = storeToRefs(this.#engineStore)
     const { mousePosOffset } = storeToRefs(this.#ioStore)
-    const { activeTool, canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
+    const { canvasSize, viewportOffset, zoomLevel } = storeToRefs(this.#canvasStore)
 
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
     watch(this.#guiStore, this.#handleOnGUIChange)
 
     watch(hoveredNodeId, this.#handleOnHoveredNodeIdChange)
+    watch(activeNodeId, this.#handleOnActiveNodeIdChange)
     watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
-    watch(activeTool, this.#handleOnActiveToolChange)
     watch(canvasSize, this.#handleOnCanvasSizeChange)
     watch(viewportOffset, this.#handleOnViewportOffsetChange)
     watch(zoomLevel, this.#handleOnZoomLevelChange)
@@ -152,18 +152,8 @@ class EngineImpl implements Engine {
     this.#render()
   }
 
-  #handleOnActiveToolChange = () => {
-    switch (this.#canvasStore.activeTool) {
-      case "Select":
-        this.#render()
-        break
-      case "Rectangle":
-      case "Circle":
-        break
-      default:
-        assertExhaustiveGuard(this.#canvasStore.activeTool)
-        break
-    }
+  #handleOnActiveNodeIdChange = () => {
+    this.#render()
   }
 
   #handleOnGUIChange = () => {
