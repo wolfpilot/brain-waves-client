@@ -2,9 +2,6 @@
 import { ref, onMounted, watch } from "vue"
 import { storeToRefs } from "pinia"
 
-// Configs
-import { config as canvasConfig } from "@configs/canvas.config"
-
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 import { type IoStore, useIoStore } from "@stores/io.stores"
@@ -58,9 +55,9 @@ const updateGridSize = () => {
 
 const panViewport = (dX: number, dY: number) => {
   if (
-    !canvasStore.canvasSize ||
-    !canvasStore.gridSize ||
     !canvasStore.viewportPos ||
+    !canvasStore.canvasSize ||
+    !canvasStore.scaledGridSize ||
     !canvasStore.siteHeaderHeight ||
     !canvasStore.siteFooterHeight
   ) {
@@ -69,12 +66,12 @@ const panViewport = (dX: number, dY: number) => {
   const newX = canvasStore.viewportPos.x - dX
   const newY = canvasStore.viewportPos.y - dY
 
-  const boundsX = (canvasStore.gridSize.width - canvasStore.canvasSize.width) / 2
-  const boundsY = (canvasStore.gridSize.height - canvasStore.canvasSize.height) / 2
+  const boundsX = (canvasStore.scaledGridSize.width - canvasStore.canvasSize.width) / 2
+  const boundsY = (canvasStore.scaledGridSize.height - canvasStore.canvasSize.height) / 2
 
   const finalX =
     // Check if the viewport is smaller than the window
-    canvasStore.gridSize.width < window.innerWidth
+    canvasStore.scaledGridSize.width < window.innerWidth
       ? 0
       : // or if outside left bounds
         newX < -boundsX
@@ -87,7 +84,7 @@ const panViewport = (dX: number, dY: number) => {
 
   const finalY =
     // Check if the viewport is smaller than the window
-    canvasStore.gridSize.height < window.innerHeight
+    canvasStore.scaledGridSize.height < window.innerHeight
       ? 0
       : // or if outside top bounds
         newY < -boundsY
@@ -131,24 +128,18 @@ onMounted(() => {
 const onWindowSizeChange = () => {
   updateCssVars()
   updateCanvasSize()
-  updateGridSize()
 
   // Force viewport to stay within boundaries
   panViewport(0, 0)
 }
 
 const onViewportOffsetChange = (state: CanvasStore["viewportOffset"]) => {
-  if (!state || !gridRef.value || !canvasStore.gridSize) return
-
-  if (!canvasStore.centreOffset) return
+  if (!state || !gridRef.value) return
 
   gridRef.value.style.transform = `translate(${state.x}px, ${state.y}px)`
 }
 
-const onMousePosChange = (
-  state: CanvasStore["viewportPos"],
-  prevState: CanvasStore["viewportPos"],
-) => {
+const onMousePosChange = (state: IoStore["mousePos"], prevState: IoStore["mousePos"]) => {
   if (!state || !prevState) return
 
   switch (true) {
@@ -164,38 +155,30 @@ const onWheelOffsetYChange = (
   state: IoStore["wheelOffsetY"],
   prevState: IoStore["wheelOffsetY"],
 ) => {
-  if (!ioStore.mousePosOffset) return
+  if (!ioStore.scaledMousePosOffset) return
 
   return state - prevState < 0
-    ? canvasService.doZoomIn(ioStore.mousePosOffset)
-    : canvasService.doZoomOut(ioStore.mousePosOffset)
+    ? canvasService.doZoomIn(ioStore.scaledMousePosOffset)
+    : canvasService.doZoomOut(ioStore.scaledMousePosOffset)
 }
 
-const onZoomScaleChange = (state: CanvasStore["zoomScale"]) => {
-  if (!canvasStore.cssVars) return
-
-  const newGridTileSize = Math.round(state * canvasConfig.grid.tileSize)
-  const newGridWidth = Math.round(state * canvasConfig.grid.width)
-  const newGridHeight = Math.round(state * canvasConfig.grid.height)
+const onZoomScaleChange = () => {
+  if (!canvasStore.cssVars || !canvasStore.scaledGridSize || !canvasStore.scaledGridTileSize) return
 
   // Bundle Map updates
   const newCssVars = new Map([...canvasStore.cssVars])
 
-  newCssVars.set("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
-  newCssVars.set("--canvas-grid-width", `${newGridWidth}px`)
-  newCssVars.set("--canvas-grid-height", `${newGridHeight}px`)
+  newCssVars.set("--canvas-grid-width", `${canvasStore.scaledGridSize.width}px`)
+  newCssVars.set("--canvas-grid-height", `${canvasStore.scaledGridSize.height}px`)
+  newCssVars.set("--canvas-grid-tile-size-px", `${canvasStore.scaledGridTileSize}px`)
 
   // Update CSS vars
-  setCssVar("--canvas-grid-tile-size-px", `${newGridTileSize}px`)
-  setCssVar("--canvas-grid-width", `${newGridWidth}px`)
-  setCssVar("--canvas-grid-height", `${newGridHeight}px`)
+  setCssVar("--canvas-grid-width", `${canvasStore.scaledGridSize.width}px`)
+  setCssVar("--canvas-grid-height", `${canvasStore.scaledGridSize.height}px`)
+  setCssVar("--canvas-grid-tile-size-px", `${canvasStore.scaledGridTileSize}px`)
 
   // Update store
   canvasStore.setCssVars(newCssVars)
-  canvasStore.setGridSize({
-    width: newGridWidth,
-    height: newGridHeight,
-  })
 
   // Force viewport to stay within boundaries
   panViewport(0, 0)

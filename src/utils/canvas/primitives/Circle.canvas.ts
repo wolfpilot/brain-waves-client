@@ -11,6 +11,7 @@ import { config } from "@configs/canvas.config"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+import { formatToDecimal } from "@utils/helpers/math.helpers"
 
 export type CirclePrimitive = PrimitiveBase & {
   type: "circle"
@@ -22,18 +23,22 @@ export type CirclePrimitive = PrimitiveBase & {
 class CirclePrimitiveImpl implements CirclePrimitive {
   type: "circle"
   pos: Coords | null
-  radius: number | null
+  radius: number
   fillColor: string | null
   borderColor: string | null
+  scaledPos: Coords | null
+  scaledRadius: number | null
   #canvasStore: CanvasStore
   #ioStore: IoStore
 
   constructor() {
     this.type = "circle"
     this.pos = null
-    this.radius = null
+    this.radius = config.nodes.circle.radius
     this.fillColor = null
     this.borderColor = null
+    this.scaledPos = null
+    this.scaledRadius = null
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
   }
@@ -46,7 +51,7 @@ class CirclePrimitiveImpl implements CirclePrimitive {
     this.#canvasStore.ctx.fillStyle = this.fillColor
     this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
-    this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, config.nodes.circle.radius, 0, 2 * Math.PI)
+    this.#canvasStore.ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI)
     this.#canvasStore.ctx.fill()
     this.#canvasStore.ctx.stroke()
   }
@@ -65,15 +70,21 @@ class CirclePrimitiveImpl implements CirclePrimitive {
   }
 
   public updateScale = () => {
-    this.radius = +(config.nodes.circle.radius * this.#canvasStore.zoomScale).toPrecision(3)
+    if (!this.pos) return
+
+    this.scaledPos = {
+      x: formatToDecimal(this.pos.x * this.#canvasStore.zoomScale),
+      y: formatToDecimal(this.pos.y * this.#canvasStore.zoomScale),
+    }
+    this.scaledRadius = formatToDecimal(config.nodes.circle.radius * this.#canvasStore.zoomScale)
   }
 
   public updatePosition = () => {
-    if (!this.radius || !this.#canvasStore.gridSize || !this.#ioStore.mousePosOffset) {
+    if (!this.#canvasStore.gridSize || !this.#ioStore.mousePosOffset) {
       return
     }
 
-    const unscaledX =
+    const newX =
       // Check if outside left bounds
       this.#ioStore.mousePosOffset.x < -this.#canvasStore.gridSize.width / 2 + this.radius
         ? -this.#canvasStore.gridSize.width / 2 + this.radius
@@ -82,7 +93,7 @@ class CirclePrimitiveImpl implements CirclePrimitive {
           ? this.#canvasStore.gridSize.width / 2 - this.radius
           : this.#ioStore.mousePosOffset.x
 
-    const unscaledY =
+    const newY =
       // Check if outside top bounds
       this.#ioStore.mousePosOffset.y < -this.#canvasStore.gridSize.height / 2 + this.radius
         ? -this.#canvasStore.gridSize.height / 2 + this.radius
@@ -91,12 +102,9 @@ class CirclePrimitiveImpl implements CirclePrimitive {
           ? this.#canvasStore.gridSize.height / 2 - this.radius
           : this.#ioStore.mousePosOffset.y
 
-    const finalX = Math.round(unscaledX / this.#canvasStore.zoomScale)
-    const finalY = Math.round(unscaledY / this.#canvasStore.zoomScale)
-
     this.pos = {
-      x: finalX,
-      y: finalY,
+      x: newX,
+      y: newY,
     }
   }
 

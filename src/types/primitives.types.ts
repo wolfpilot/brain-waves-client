@@ -6,6 +6,7 @@ import type { CirclePrimitive } from "@utils/canvas/primitives/Circle.canvas"
 export interface PrimitiveBase {
   type: PrimitiveType
   pos: Coords | null
+  scaledPos: Coords | null
   init: () => void
   place: () => void
   hover: (val: boolean) => void

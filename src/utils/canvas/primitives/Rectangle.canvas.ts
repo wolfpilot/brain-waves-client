@@ -11,6 +11,7 @@ import { config } from "@configs/canvas.config"
 
 // Utils
 import { assertExhaustiveGuard } from "@utils/helpers/typeguard.helpers"
+import { formatToDecimal } from "@utils/helpers/math.helpers"
 
 export type RectanglePrimitive = PrimitiveBase & {
   type: "rectangle"
@@ -24,22 +25,28 @@ export type RectanglePrimitive = PrimitiveBase & {
 class RectanglePrimitiveImpl implements RectanglePrimitive {
   type: "rectangle"
   pos: Coords | null
-  width: number | null
-  height: number | null
+  width: number
+  height: number
   fillColor: string | null
   borderColor: string | null
   borderRadius: number | null
+  scaledPos: Coords | null
+  scaledWidth: number | null
+  scaledHeight: number | null
   #canvasStore: CanvasStore
   #ioStore: IoStore
 
   constructor() {
     this.type = "rectangle"
     this.pos = null
-    this.width = null
-    this.height = null
+    this.width = config.nodes.rectangle.width
+    this.height = config.nodes.rectangle.height
     this.fillColor = null
     this.borderColor = null
     this.borderRadius = null
+    this.scaledPos = null
+    this.scaledWidth = null
+    this.scaledHeight = null
     this.#canvasStore = useCanvasStore()
     this.#ioStore = useIoStore()
   }
@@ -72,10 +79,10 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
     this.#canvasStore.ctx.strokeStyle = this.borderColor
     this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.roundRect(
-      this.pos.x - config.nodes.rectangle.width / 2,
-      this.pos.y - config.nodes.rectangle.height / 2,
-      config.nodes.rectangle.width,
-      config.nodes.rectangle.height,
+      this.pos.x - this.width / 2,
+      this.pos.y - this.height / 2,
+      this.width,
+      this.height,
       [this.borderRadius],
     )
     this.#canvasStore.ctx.fill()
@@ -83,21 +90,22 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
   }
 
   public updateScale = () => {
-    this.width = +(config.nodes.rectangle.width * this.#canvasStore.zoomScale).toPrecision(3)
-    this.height = +(config.nodes.rectangle.height * this.#canvasStore.zoomScale).toPrecision(3)
+    if (!this.pos) return
+
+    this.scaledPos = {
+      x: formatToDecimal(this.pos.x * this.#canvasStore.zoomScale),
+      y: formatToDecimal(this.pos.y * this.#canvasStore.zoomScale),
+    }
+    this.scaledWidth = formatToDecimal(this.width * this.#canvasStore.zoomScale)
+    this.scaledHeight = formatToDecimal(this.height * this.#canvasStore.zoomScale)
   }
 
   public updatePosition = () => {
-    if (
-      !this.width ||
-      !this.height ||
-      !this.#canvasStore.gridSize ||
-      !this.#ioStore.mousePosOffset
-    ) {
+    if (!this.#canvasStore.gridSize || !this.#ioStore.mousePosOffset) {
       return
     }
 
-    const unscaledX =
+    const newX =
       // Check if outside left bounds
       this.#ioStore.mousePosOffset.x < (-this.#canvasStore.gridSize.width + this.width) / 2
         ? (-this.#canvasStore.gridSize.width + this.width) / 2
@@ -106,7 +114,7 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
           ? (this.#canvasStore.gridSize.width - this.width) / 2
           : this.#ioStore.mousePosOffset.x
 
-    const unscaledY =
+    const newY =
       // Check if outside top bounds
       this.#ioStore.mousePosOffset.y < (-this.#canvasStore.gridSize.height + this.height) / 2
         ? (-this.#canvasStore.gridSize.height + this.height) / 2
@@ -115,12 +123,9 @@ class RectanglePrimitiveImpl implements RectanglePrimitive {
           ? (this.#canvasStore.gridSize.height - this.height) / 2
           : this.#ioStore.mousePosOffset.y
 
-    const finalX = Math.round(unscaledX / this.#canvasStore.zoomScale)
-    const finalY = Math.round(unscaledY / this.#canvasStore.zoomScale)
-
     this.pos = {
-      x: finalX,
-      y: finalY,
+      x: newX,
+      y: newY,
     }
   }
 

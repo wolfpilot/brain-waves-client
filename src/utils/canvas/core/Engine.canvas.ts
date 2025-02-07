@@ -54,13 +54,12 @@ class EngineImpl implements Engine {
     watch(this.#ioStore.activeMouseButtons, this.#handleOnMouseButtonsChange)
     watch(this.#guiStore, this.#handleOnGUIChange)
 
+    watch(hoveredNodeId, this.#handleOnHoveredNodeIdChange)
     watch(mousePosOffset, this.#handleOnMousePosOffsetChange)
     watch(activeTool, this.#handleOnActiveToolChange)
     watch(canvasSize, this.#handleOnCanvasSizeChange)
     watch(viewportOffset, this.#handleOnViewportOffsetChange)
     watch(zoomLevel, this.#handleOnZoomLevelChange)
-
-    watch(hoveredNodeId, this.#handleOnHoveredNodeIdChange)
   }
 
   #handleOnMouseButtonsChange = (state: IoStore["activeMouseButtons"]) => {
@@ -105,7 +104,7 @@ class EngineImpl implements Engine {
       const hoveredIds = []
 
       for (const [key, value] of this.#engineStore.nodes) {
-        if (isInsideShape(pos, value.primitive, this.#canvasStore.zoomScale)) {
+        if (isInsideShape(pos, value.primitive)) {
           hoveredIds.push(key)
         }
       }
@@ -136,20 +135,6 @@ class EngineImpl implements Engine {
     }
   }
 
-  #handleOnActiveToolChange = () => {
-    switch (this.#canvasStore.activeTool) {
-      case "Select":
-        this.#render()
-        break
-      case "Rectangle":
-      case "Circle":
-        break
-      default:
-        assertExhaustiveGuard(this.#canvasStore.activeTool)
-        break
-    }
-  }
-
   #handleOnHoveredNodeIdChange = (
     state: EngineStore["hoveredNodeId"],
     prevState: EngineStore["hoveredNodeId"],
@@ -165,6 +150,20 @@ class EngineImpl implements Engine {
     }
 
     this.#render()
+  }
+
+  #handleOnActiveToolChange = () => {
+    switch (this.#canvasStore.activeTool) {
+      case "Select":
+        this.#render()
+        break
+      case "Rectangle":
+      case "Circle":
+        break
+      default:
+        assertExhaustiveGuard(this.#canvasStore.activeTool)
+        break
+    }
   }
 
   #handleOnGUIChange = () => {
