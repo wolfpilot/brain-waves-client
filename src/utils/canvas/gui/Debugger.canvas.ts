@@ -24,6 +24,12 @@ class DebuggerImpl implements Debugger {
   }
 
   public draw = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const isDebugEnabled = urlParams.get("debug")
+
+    // Delay initialisation until we confirm the debug is actually needed
+    if (isDebugEnabled !== "true") return
+
     if (debugConfig.surface) {
       this.#drawSurface()
     }

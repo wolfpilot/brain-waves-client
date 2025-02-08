@@ -20,8 +20,6 @@ class GUIImpl implements GUI {
   }
 
   public init = () => {
-    this.#guiStore = useGUIStore()
-
     this.#setup()
 
     return Promise.resolve()
@@ -31,8 +29,10 @@ class GUIImpl implements GUI {
     const urlParams = new URLSearchParams(window.location.search)
     const isDebugEnabled = urlParams.get("debug")
 
+    // Delay initialisation until we confirm the debug is actually needed
     if (isDebugEnabled !== "true") return
 
+    this.#guiStore = useGUIStore()
     this.#pane = new Pane({
       title: "Grid",
       expanded: true,
