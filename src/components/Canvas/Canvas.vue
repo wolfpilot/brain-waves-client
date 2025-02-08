@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue"
+import { ref, onMounted, watch, computed } from "vue"
 import { storeToRefs } from "pinia"
 
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 import { type IoStore, useIoStore } from "@stores/io.stores"
+import { useEngineStore } from "@stores/engine.stores"
 
 // Constants
-import { IS_GRAB, IS_GRABBING } from "@constants/styles.constants"
+import { CLASSNAMES } from "@constants/styles.constants"
 
 // Utils
 import { useCanvas } from "@utils/services"
@@ -20,6 +21,7 @@ import { Toolbar } from "@components/gui"
 
 const canvasStore = useCanvasStore()
 const ioStore = useIoStore()
+const engineStore = useEngineStore()
 const canvasService = useCanvas()
 
 const { viewportOffset, zoomScale } = storeToRefs(canvasStore)
@@ -27,6 +29,21 @@ const { windowSize, mousePos, wheelOffsetY } = storeToRefs(ioStore)
 
 const gridRef = ref<HTMLDivElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+
+const classNames = {
+  mouseCursor: computed(() => {
+    switch (true) {
+      case ioStore.activeMouseButtons.get("middle"):
+        return CLASSNAMES.cursor.IS_GRABBING
+      case !!engineStore.activeNodeId:
+        return CLASSNAMES.cursor.IS_POINTER
+      case !!engineStore.hoveredNodeId:
+        return CLASSNAMES.cursor.IS_DEFAULT
+      default:
+        return CLASSNAMES.cursor.IS_GRAB
+    }
+  }),
+}
 
 // Helpers
 const updateCssVars = () => {
@@ -192,7 +209,7 @@ watch(zoomScale, onZoomScaleChange)
 </script>
 
 <template>
-  <div :class="[$style.wrapper, ioStore.activeMouseButtons.get('middle') ? IS_GRABBING : IS_GRAB]">
+  <div :class="[$style.wrapper, classNames.mouseCursor.value]">
     <Toolbar />
     <div ref="gridRef" :class="$style.grid" />
     <canvas
