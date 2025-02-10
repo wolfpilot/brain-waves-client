@@ -41,6 +41,7 @@
   --c-accent-4-90: hsla(293.33, 11.25%, 31.37%, 0.9);
 
   --c-node-fill: hsl(248.5 12.75% 10.75%);
+  --c-node-hover-fill: hsl(252, 15%, 13%);
 
   --c-success: hsl(142, 52%, 50%);
   --c-error: hsl(358, 82%, 64%);

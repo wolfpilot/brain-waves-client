@@ -10,6 +10,9 @@ import { useCanvasStore } from "./canvas.stores"
 // Constants
 import { type MouseBtnValuesTypes } from "@constants/keys.constants"
 
+// Utils
+import { formatToDecimal } from "@utils/helpers/math.helpers"
+
 export const useIoStore = defineStore("io", () => {
   const canvasStore = useCanvasStore()
 
@@ -23,29 +26,50 @@ export const useIoStore = defineStore("io", () => {
     activeMouseButtons: <Map<MouseBtnValuesTypes, boolean>>new Map(),
   })
 
-  const getters = {
-    /**
-     * Translate mouse to Cartesian system coordinates
-     */
-    mousePosOffset: computed(() => {
-      if (
-        !state.mousePos ||
-        !canvasStore.siteHeaderHeight ||
-        !canvasStore.canvasSize ||
-        !canvasStore.viewportPos
-      ) {
-        return null
-      }
+  /**
+   * Contrary to Canvas elements, the mouse position is scaled automatically due to
+   * calculations relative to already scaled elements.
+   *
+   * To get the original, unscaled position we divide by the current zoom scale.
+   */
+  const mousePosOffset = computed(() => {
+    if (!scaledMousePosOffset.value) return null
 
-      return {
-        x: state.mousePos.x - canvasStore.canvasSize.width / 2 + canvasStore.viewportPos.x,
-        y:
-          state.mousePos.y -
+    return {
+      x: formatToDecimal(scaledMousePosOffset.value.x / canvasStore.zoomScale),
+      y: formatToDecimal(scaledMousePosOffset.value.y / canvasStore.zoomScale),
+    }
+  })
+
+  /**
+   * Translate mouse to Cartesian system coordinates
+   */
+  const scaledMousePosOffset = computed<Coords | null>(() => {
+    if (
+      !state.mousePos ||
+      !canvasStore.siteHeaderHeight ||
+      !canvasStore.canvasSize ||
+      !canvasStore.viewportPos
+    ) {
+      return null
+    }
+
+    return {
+      x: formatToDecimal(
+        state.mousePos.x - canvasStore.canvasSize.width / 2 + canvasStore.viewportPos.x,
+      ),
+      y: formatToDecimal(
+        state.mousePos.y -
           canvasStore.canvasSize.height / 2 +
           canvasStore.viewportPos.y -
           canvasStore.siteHeaderHeight,
-      }
-    }),
+      ),
+    }
+  })
+
+  const getters = {
+    scaledMousePosOffset,
+    mousePosOffset,
   }
 
   const actions = {

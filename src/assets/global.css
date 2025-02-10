@@ -1,8 +1,20 @@
 /* Modifiers */
-.IS_GRAB {
+.CURSOR_IS_DEFAULT {
+  cursor: default;
+}
+
+.CURSOR_IS_GRAB {
   cursor: grab;
 }
 
-.IS_GRABBING {
+.CURSOR_IS_GRABBING {
   cursor: grabbing;
+}
+
+.CURSOR_IS_POINTER {
+  cursor: pointer;
+}
+
+.CURSOR_IS_MOVE {
+  cursor: move;
 }

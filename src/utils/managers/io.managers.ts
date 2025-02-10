@@ -24,6 +24,18 @@ class IoManagerImpl implements IoManager {
     this.#canvasElem = document.getElementsByTagName("canvas")[0]
   }
 
+  public init = () => {
+    this.#bindListeners()
+  }
+
+  #bindListeners = () => {
+    useEventListener(this.#canvasElem, "wheel", this.#handleWheel)
+    useEventListener(this.#canvasElem, "mousedown", this.#handleMouseDown)
+    useEventListener(window, "mouseup", this.#handleMouseUp)
+    useEventListener(window, "mousemove", this.#handleMouseMove)
+    useEventListener(window, "resize", this.#handleResize)
+  }
+
   #handleWheel = (e: WheelEvent) => {
     const newOffset = e.deltaY > 0 ? this.#ioStore.wheelOffsetY + 1 : this.#ioStore.wheelOffsetY - 1
 
@@ -55,18 +67,6 @@ class IoManagerImpl implements IoManager {
       height: window.innerHeight,
     })
   }, DEBOUNCE_RESIZE_MS)
-
-  #bindListeners = () => {
-    useEventListener(this.#canvasElem, "wheel", this.#handleWheel)
-    useEventListener(this.#canvasElem, "mousedown", this.#handleMouseDown)
-    useEventListener(window, "mouseup", this.#handleMouseUp)
-    useEventListener(window, "mousemove", this.#handleMouseMove)
-    useEventListener(window, "resize", this.#handleResize)
-  }
-
-  public init = () => {
-    this.#bindListeners()
-  }
 }
 
 export default IoManagerImpl

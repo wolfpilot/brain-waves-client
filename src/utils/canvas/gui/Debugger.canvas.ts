@@ -17,6 +17,36 @@ class DebuggerImpl implements Debugger {
     this.#canvasStore = useCanvasStore()
   }
 
+  public init = () => {
+    this.draw()
+
+    return Promise.resolve()
+  }
+
+  public draw = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const isDebugEnabled = urlParams.get("debug")
+
+    // Delay initialisation until we confirm the debug is actually needed
+    if (isDebugEnabled !== "true") return
+
+    if (debugConfig.surface) {
+      this.#drawSurface()
+    }
+
+    if (debugConfig.corners) {
+      this.#drawCorners()
+    }
+
+    if (debugConfig.crosshair) {
+      this.#drawCrosshair()
+    }
+
+    if (debugConfig.centre) {
+      this.#drawCentre()
+    }
+  }
+
   #drawSurface = () => {
     if (!this.#canvasStore.ctx || !this.#canvasStore.cssVars) return
 
@@ -118,30 +148,6 @@ class DebuggerImpl implements Debugger {
     this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.arc(0, 0, 5, 0, 2 * Math.PI)
     this.#canvasStore.ctx.fill()
-  }
-
-  public draw = () => {
-    if (debugConfig.surface) {
-      this.#drawSurface()
-    }
-
-    if (debugConfig.corners) {
-      this.#drawCorners()
-    }
-
-    if (debugConfig.crosshair) {
-      this.#drawCrosshair()
-    }
-
-    if (debugConfig.centre) {
-      this.#drawCentre()
-    }
-  }
-
-  public init = () => {
-    this.draw()
-
-    return Promise.resolve()
   }
 }
 

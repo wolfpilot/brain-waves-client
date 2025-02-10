@@ -10,6 +10,9 @@ import { config as canvasConfig } from "@configs/canvas.config"
 // Constants
 import { type ToolValueTypes, TOOLBAR_TOOLS } from "@constants/toolbar.constants"
 
+// Utils
+import { formatToDecimal } from "@utils/helpers/math.helpers"
+
 /**
  * Create a store with state as read-only values, updatable via actions
  *
@@ -21,9 +24,10 @@ export const useCanvasStore = defineStore("canvas", () => {
 
   const state = reactive({
     cssVars: <Map<string, CSSUnparsedSegment> | null>null,
+    viewportPos: <Coords | null>null,
     canvasSize: <Dimensions | null>null,
     gridSize: <Dimensions | null>null,
-    viewportPos: <Coords | null>null,
+    gridTileSize: <number>canvasConfig.grid.tileSize,
     zoomLevel: <number>canvasConfig.zoom.level,
     zoomScale: <number>canvasConfig.zoom.scale,
     activeTool: <ToolValueTypes>TOOLBAR_TOOLS.select,
@@ -35,11 +39,11 @@ export const useCanvasStore = defineStore("canvas", () => {
    * to the middle of the grid, rather than top-left.
    */
   const centreOffset = computed(() => {
-    if (!state.gridSize) return null
+    if (!scaledGridSize.value) return null
 
     return {
-      x: state.gridSize.width / 2,
-      y: state.gridSize.height / 2,
+      x: scaledGridSize.value.width / 2,
+      y: scaledGridSize.value.height / 2,
     }
   })
 
@@ -82,11 +86,38 @@ export const useCanvasStore = defineStore("canvas", () => {
     return parseInt(cssSiteFooterHeight, 10)
   })
 
+  const scaledGridSize = computed<Dimensions | null>(() => {
+    if (!state.gridSize) return null
+
+    return {
+      width: formatToDecimal(state.gridSize.width * state.zoomScale),
+      height: formatToDecimal(state.gridSize.height * state.zoomScale),
+    }
+  })
+
+  const scaledGridTileSize = computed<number | null>(() => {
+    if (!state.gridTileSize) return null
+
+    return formatToDecimal(state.gridTileSize * state.zoomScale)
+  })
+
+  const scaledViewportPos = computed<Coords | null>(() => {
+    if (!state.viewportPos) return null
+
+    return {
+      x: formatToDecimal(state.viewportPos.x * state.zoomScale),
+      y: formatToDecimal(state.viewportPos.y * state.zoomScale),
+    }
+  })
+
   const getters = {
     centreOffset,
     viewportOffset,
     siteHeaderHeight,
     siteFooterHeight,
+    scaledGridSize,
+    scaledGridTileSize,
+    scaledViewportPos,
   }
 
   const actions = {

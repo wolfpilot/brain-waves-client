@@ -14,6 +14,7 @@ import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
 
 // Utils
 import { useEngine } from "@utils/services"
+import { formatToDecimal } from "@utils/helpers/math.helpers"
 
 const useCanvas = () => {
   const canvasStore = useCanvasStore()
@@ -71,7 +72,7 @@ const useCanvas = () => {
 
     const newScaleFactor = canvasConfig.zoom.factor
     const newLevel = Math.min(canvasStore.zoomLevel + 1, canvasConfig.zoom.max)
-    const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
+    const newScale = formatToDecimal(canvasStore.zoomScale * newScaleFactor)
 
     zoomTo(newScaleFactor, newLevel, newScale, newPosition)
   }
@@ -81,7 +82,7 @@ const useCanvas = () => {
 
     const newScaleFactor = 1 / canvasConfig.zoom.factor
     const newLevel = Math.max(canvasStore.zoomLevel - 1, canvasConfig.zoom.min)
-    const newScale = +(canvasStore.zoomScale * newScaleFactor).toPrecision(3)
+    const newScale = formatToDecimal(canvasStore.zoomScale * newScaleFactor)
 
     zoomTo(newScaleFactor, newLevel, newScale, newPosition)
   }
