@@ -1,8 +1,12 @@
-import { ref, reactive, readonly, toRefs } from "vue"
+import { reactive, readonly, toRefs } from "vue"
 import { defineStore } from "pinia"
+
+// Configs
+import { config as canvasConfig } from "@configs/canvas.config"
 
 // Utils
 import { CanvasNode } from "@utils/canvas/nodes"
+import { QuadTree } from "@utils/canvas/layout"
 
 export interface Props {
   ctx: CanvasRenderingContext2D
@@ -11,8 +15,14 @@ export interface Props {
 export const useEngineStore = defineStore("engine", () => {
   const state = reactive({
     nodes: new Map<string, CanvasNode>(),
-    activeNodeId: ref<string | null>(null),
-    hoveredNodeId: ref<string | null>(null),
+    activeNodeId: <string | null>null,
+    hoveredNodeId: <string | null>null,
+    quadtree: new QuadTree({
+      x: 0,
+      y: 0,
+      width: canvasConfig.grid.width,
+      height: canvasConfig.grid.height,
+    }),
   })
 
   const actions = {
@@ -27,6 +37,9 @@ export const useEngineStore = defineStore("engine", () => {
     },
     setActiveNodeId(val: string | null) {
       state.activeNodeId = val
+    },
+    addQuadTreeNode(id: string, node: CanvasNode) {
+      state.quadtree.add(id, node)
     },
   }
 

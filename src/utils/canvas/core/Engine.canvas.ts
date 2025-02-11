@@ -3,6 +3,7 @@ import { storeToRefs } from "pinia"
 
 // Types
 import type { Coords } from "@ts/math.types"
+import type { CanvasNode } from "@utils/canvas/nodes"
 
 // Stores
 import { type EngineStore, useEngineStore } from "@stores/engine.stores"
@@ -194,6 +195,8 @@ class EngineImpl implements Engine {
     if (!activeNode) return
 
     activeNode.updateMode("done")
+
+    this.#engineStore.addQuadTreeNode(this.#engineStore.activeNodeId, activeNode as CanvasNode)
     this.#engineStore.setHoveredNodeId(this.#engineStore.activeNodeId)
     this.#engineStore.setActiveNodeId(null)
     this.#canvasStore.resetActiveTool()
