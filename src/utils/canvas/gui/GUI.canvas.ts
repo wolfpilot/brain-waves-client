@@ -42,6 +42,7 @@ class GUIImpl implements GUI {
     this.#pane.addBinding(config, "corners").on("change", this.#handleCornersChange)
     this.#pane.addBinding(config, "crosshair").on("change", this.#handleCrosshairChange)
     this.#pane.addBinding(config, "centre").on("change", this.#handleCentreChange)
+    this.#pane.addBinding(config, "quadtree").on("change", this.#handleQuadtreeChange)
   }
 
   #handleSurfaceChange = (e: TpChangeEvent<boolean>) => {
@@ -63,6 +64,12 @@ class GUIImpl implements GUI {
   }
 
   #handleCentreChange = (e: TpChangeEvent<boolean>) => {
+    if (!this.#guiStore) return
+
+    this.#guiStore.setIsCentreEnabled(e.value)
+  }
+
+  #handleQuadtreeChange = (e: TpChangeEvent<boolean>) => {
     if (!this.#guiStore) return
 
     this.#guiStore.setIsCentreEnabled(e.value)

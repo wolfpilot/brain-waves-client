@@ -3,4 +3,5 @@ export const config = {
   corners: false,
   crosshair: false,
   centre: false,
+  quadtree: false,
 }

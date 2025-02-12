@@ -9,7 +9,7 @@ export interface Props {
 }
 
 // Setup
-const { surface, corners, crosshair, centre } = debugConfig
+const { surface, corners, crosshair, centre, quadtree } = debugConfig
 
 export const useGUIStore = defineStore("gui", () => {
   const state = reactive({
@@ -17,6 +17,7 @@ export const useGUIStore = defineStore("gui", () => {
     corners,
     crosshair,
     centre,
+    quadtree,
   })
 
   const actions = {
@@ -31,6 +32,9 @@ export const useGUIStore = defineStore("gui", () => {
     },
     setIsCentreEnabled(val: boolean) {
       state.centre = val
+    },
+    setIsQuadtreeEnabled(val: boolean) {
+      state.quadtree = val
     },
   }
 

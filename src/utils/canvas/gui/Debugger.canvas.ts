@@ -1,9 +1,13 @@
+// Types
+import { QuadTree } from "@utils/canvas/layout"
+
 // Configs
 import { config as canvasConfig } from "@configs/canvas.config"
 import { config as debugConfig } from "@configs/debug.config"
 
 // Stores
 import { type CanvasStore, useCanvasStore } from "@stores/canvas.stores"
+import { type EngineStore, useEngineStore } from "@stores/engine.stores"
 
 export interface Debugger {
   init: () => Promise<void>
@@ -12,9 +16,11 @@ export interface Debugger {
 
 class DebuggerImpl implements Debugger {
   #canvasStore: CanvasStore
+  #engineStore: EngineStore
 
   constructor() {
     this.#canvasStore = useCanvasStore()
+    this.#engineStore = useEngineStore()
   }
 
   public init = () => {
@@ -45,6 +51,10 @@ class DebuggerImpl implements Debugger {
     if (debugConfig.centre) {
       this.#drawCentre()
     }
+
+    if (debugConfig.quadtree) {
+      this.#drawQuadTree()
+    }
   }
 
   #drawSurface = () => {
@@ -54,6 +64,7 @@ class DebuggerImpl implements Debugger {
 
     if (!cssSurfaceColor) return
 
+    this.#canvasStore.ctx.beginPath()
     this.#canvasStore.ctx.fillStyle = cssSurfaceColor as string
     this.#canvasStore.ctx.rect(
       -canvasConfig.grid.width / 2,
@@ -98,8 +109,8 @@ class DebuggerImpl implements Debugger {
     ]
 
     for (let i = 0; i < cornerPositions.length; i++) {
-      this.#canvasStore.ctx.fillStyle = cssCornerColor as string
       this.#canvasStore.ctx.beginPath()
+      this.#canvasStore.ctx.fillStyle = cssCornerColor as string
       this.#canvasStore.ctx.arc(cornerPositions[i].x, cornerPositions[i].y, 20, 0, 2 * Math.PI)
       this.#canvasStore.ctx.fill()
     }
@@ -144,10 +155,39 @@ class DebuggerImpl implements Debugger {
 
     if (!cssCentreColor) return
 
-    this.#canvasStore.ctx.fillStyle = cssCentreColor as string
     this.#canvasStore.ctx.beginPath()
+    this.#canvasStore.ctx.fillStyle = cssCentreColor as string
     this.#canvasStore.ctx.arc(0, 0, 5, 0, 2 * Math.PI)
     this.#canvasStore.ctx.fill()
+  }
+
+  #drawQuadTree = () => {
+    if (!this.#canvasStore.ctx || !this.#canvasStore.cssVars) return
+
+    const cssQuadtreeColor = this.#canvasStore.cssVars.get("--c-debug-canvas-quadtree")
+    const cssQuadtreeBorderColor = this.#canvasStore.cssVars.get("--c-debug-canvas-quadtree-border")
+
+    if (!cssQuadtreeColor) return
+
+    const ctx = this.#canvasStore.ctx
+
+    const drawSubdivision = (tree: QuadTree) => {
+      ctx.fillStyle = cssQuadtreeColor as string
+      ctx.strokeStyle = cssQuadtreeBorderColor as string
+
+      const { x, y, width, height } = tree.bounds
+
+      ctx.beginPath()
+      ctx.rect(x - width / 2, y - height / 2, width, height)
+      ctx.fill()
+      ctx.stroke()
+
+      for (let i = 0; i < tree.quadrants.length; i++) {
+        drawSubdivision(tree.quadrants[i] as QuadTree)
+      }
+    }
+
+    drawSubdivision(this.#engineStore.quadtree as QuadTree)
   }
 }
 
